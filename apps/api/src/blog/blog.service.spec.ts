@@ -46,7 +46,26 @@ describe('BlogService', () => {
     );
   });
 
-  // TEST 6: update throws 403 when non-owner updates
+  // TEST 6: create retries with nanoid suffix on slug collision
+  it('create should append nanoid suffix on slug collision', async () => {
+    const uniqueError = { code: 'P2002', meta: { target: ['slug'] } };
+    prisma.blog.create
+      .mockRejectedValueOnce(uniqueError)
+      .mockResolvedValueOnce({
+        id: 'blog-1', title: 'My First Blog', slug: 'my-first-blog-abc123',
+      });
+
+    const result = await service.create(
+      { title: 'My First Blog', content: 'Content here' },
+      'user-1',
+    );
+
+    expect(prisma.blog.create).toHaveBeenCalledTimes(2);
+    const retryCall = prisma.blog.create.mock.calls[1][0];
+    expect(retryCall.data.slug).toMatch(/^my-first-blog-.+/);
+  });
+
+  // TEST 7: update throws 403 when non-owner updates
   it('update should throw ForbiddenException when non-owner updates', async () => {
     prisma.blog.findUnique.mockResolvedValue({ id: 'blog-1', userId: 'owner-1' });
 

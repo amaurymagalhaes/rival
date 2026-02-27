@@ -12,13 +12,15 @@ type DeleteBlogButtonProps = {
 export function DeleteBlogButton({ blogId }: DeleteBlogButtonProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleDelete() {
     setDeleting(true);
+    setError(null);
     const result = await deleteBlog(blogId);
     if (result.error) {
-      alert(result.error);
+      setError(result.error);
       setDeleting(false);
       setConfirming(false);
       return;
@@ -28,34 +30,40 @@ export function DeleteBlogButton({ blogId }: DeleteBlogButtonProps) {
 
   if (confirming) {
     return (
-      <div className="flex gap-2">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? 'Deleting...' : 'Confirm'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setConfirming(false)}
-          disabled={deleting}
-        >
-          Cancel
-        </Button>
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-2">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Confirm'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirming(false)}
+            disabled={deleting}
+          >
+            Cancel
+          </Button>
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
     );
   }
 
   return (
-    <Button
-      variant="destructive"
-      size="sm"
-      onClick={() => setConfirming(true)}
-    >
-      Delete
-    </Button>
+    <div className="flex flex-col gap-1">
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => setConfirming(true)}
+      >
+        Delete
+      </Button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
   );
 }

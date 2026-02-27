@@ -48,6 +48,13 @@ export class BlogService {
     });
   }
 
+  async findOneByUser(id: string, userId: string) {
+    const blog = await this.prisma.blog.findUnique({ where: { id } });
+    if (!blog) throw new NotFoundException('Blog not found');
+    if (blog.userId !== userId) throw new ForbiddenException('Not the blog owner');
+    return blog;
+  }
+
   async findBySlug(slug: string) {
     const blog = await this.prisma.blog.findUnique({
       where: { slug },

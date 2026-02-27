@@ -60,10 +60,10 @@ describe('AuthService', () => {
     ).rejects.toThrow(ConflictException);
   });
 
-  // TEST 3: login returns access token for valid credentials
-  it('login should return accessToken for valid credentials', async () => {
+  // TEST 3: login returns access token for valid credentials and excludes passwordHash
+  it('login should return accessToken for valid credentials and exclude passwordHash', async () => {
     prisma.user.findUnique.mockResolvedValue({
-      id: 'user-1', email: 'test@test.com', passwordHash: 'hashed',
+      id: 'user-1', email: 'test@test.com', name: 'Test', passwordHash: 'hashed',
     });
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -73,6 +73,8 @@ describe('AuthService', () => {
 
     expect(bcrypt.compare).toHaveBeenCalledWith('TestPass123!', 'hashed');
     expect(result).toHaveProperty('accessToken', 'mock-token');
+    expect(result.user).not.toHaveProperty('passwordHash');
+    expect(result.user).toEqual({ id: 'user-1', email: 'test@test.com', name: 'Test' });
   });
 
   // TEST 4: login throws 401 for wrong password

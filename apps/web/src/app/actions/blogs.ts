@@ -24,10 +24,9 @@ export async function getBlogs(): Promise<Blog[]> {
 
 export async function getBlog(id: string): Promise<Blog | null> {
   const headers = await getAuthHeaders();
-  const res = await fetch(createApiUrl(`/blogs`), { headers });
+  const res = await fetch(createApiUrl(`/blogs/${id}`), { headers });
   if (!res.ok) return null;
-  const blogs: Blog[] = await res.json();
-  return blogs.find((b) => b.id === id) ?? null;
+  return res.json();
 }
 
 export type BlogFormState = {

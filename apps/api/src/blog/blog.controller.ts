@@ -29,6 +29,11 @@ export class BlogController {
     return this.blogService.findAllByUser(req.user.id);
   }
 
+  @Get(':id')
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.blogService.findOneByUser(id, req.user.id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateBlogDto, @Req() req: any) {
     return this.blogService.update(id, dto, req.user.id);

@@ -47,6 +47,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      select: { id: true, email: true, name: true, passwordHash: true },
     });
 
     if (!user) {
@@ -71,9 +72,13 @@ export class AuthService {
   }
 
   async me(userId: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true, name: true, createdAt: true },
     });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return user;
   }
 }
