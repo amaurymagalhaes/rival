@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  blogs    Blog[]
+  likes    Like[]
+  comments Comment[]
+
+  @@map("users")
+}
+
+model Blog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  title       String
+  slug        String   @unique
+  content     String
+  summary     String?
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes    Like[]
+  comments Comment[]
+
+  @@index([userId])
+  @@index([isPublished, createdAt(sort: Desc)])
+  @@map("blogs")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  blogId    String   @map("blog_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blogId])
+  @@index([blogId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  blogId    String   @map("blog_id")
+  userId    String   @map("user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([blogId])
+  @@index([createdAt(sort: Desc)])
+  @@map("comments")
+}
