@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { BlogSummaryProducer } from '../queue/producers/blog-summary.producer';
 import { ForbiddenException } from '@nestjs/common';
 
 describe('BlogService', () => {
@@ -18,10 +19,16 @@ describe('BlogService', () => {
       },
     };
 
+    const summaryProducer = {
+      enqueueSummaryGeneration: jest.fn().mockResolvedValue(undefined),
+      enqueueRegeneration: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BlogService,
         { provide: PrismaService, useValue: prisma },
+        { provide: BlogSummaryProducer, useValue: summaryProducer },
       ],
     }).compile();
 
@@ -31,7 +38,7 @@ describe('BlogService', () => {
   // TEST 5: create generates correct slug from title
   it('create should generate slug from title', async () => {
     prisma.blog.create.mockResolvedValue({
-      id: 'blog-1', title: 'My First Blog', slug: 'my-first-blog',
+      id: 'blog-1', title: 'My First Blog', slug: 'my-first-blog', isPublished: false,
     });
 
     const result = await service.create(
@@ -52,7 +59,7 @@ describe('BlogService', () => {
     prisma.blog.create
       .mockRejectedValueOnce(uniqueError)
       .mockResolvedValueOnce({
-        id: 'blog-1', title: 'My First Blog', slug: 'my-first-blog-abc123',
+        id: 'blog-1', title: 'My First Blog', slug: 'my-first-blog-abc123', isPublished: false,
       });
 
     const result = await service.create(

@@ -1,10 +1,16 @@
 import { Controller, Get } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { AppService } from './app.service';
 import { Public } from './common/decorators/public.decorator';
+import { QUEUE_NAMES } from './queue/queue.constants';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    @InjectQueue(QUEUE_NAMES.BLOG_SUMMARY) private readonly summaryQueue: Queue,
+  ) {}
 
   @Get()
   @Public()
@@ -14,7 +20,13 @@ export class AppController {
 
   @Get('health')
   @Public()
-  health(): { status: string; timestamp: string } {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+  async health() {
+    const client = await this.summaryQueue.client;
+    const redisStatus = client.status;
+    return {
+      status: 'ok',
+      redis: redisStatus === 'ready' ? 'connected' : redisStatus,
+      timestamp: new Date().toISOString(),
+    };
   }
 }
