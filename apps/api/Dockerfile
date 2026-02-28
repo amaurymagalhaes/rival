@@ -5,7 +5,11 @@ FROM node:20-bookworm-slim AS builder
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 
-RUN corepack enable
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable && corepack prepare pnpm@10.13.1 --activate
 
 WORKDIR /app
 
@@ -14,16 +18,17 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/api/package.json apps/api/package.json
 
 # Install only the API workspace dependencies (including dev deps for build).
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile --filter api...
+RUN pnpm install --frozen-lockfile --filter api...
 
 COPY apps/api apps/api
 
 RUN pnpm --filter api prisma:generate
 RUN pnpm --filter api build
 
-# Keep only production dependencies for the runtime image.
-RUN pnpm prune --prod
+# Create a production-only bundle for the API workspace.
+RUN pnpm --filter api deploy --legacy --prod /prod/api
+# Generate Prisma client inside the production bundle.
+RUN pnpm --dir /prod/api prisma:generate
 
 
 FROM node:20-bookworm-slim AS runner
@@ -31,15 +36,15 @@ FROM node:20-bookworm-slim AS runner
 ENV NODE_ENV=production
 ENV PORT=4000
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app/apps/api
 
-# Copy runtime files from builder.
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/apps/api/node_modules /app/apps/api/node_modules
+# Copy production package output and compiled NestJS bundle.
+COPY --from=builder /prod/api/ /app/apps/api/
 COPY --from=builder /app/apps/api/dist /app/apps/api/dist
-COPY --from=builder /app/apps/api/prisma /app/apps/api/prisma
-COPY --from=builder /app/apps/api/package.json /app/apps/api/package.json
-COPY --from=builder /app/apps/api/prisma.config.ts /app/apps/api/prisma.config.ts
 
 EXPOSE 4000
 
