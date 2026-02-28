@@ -34,7 +34,7 @@ export class HttpFeedGateway implements FeedGateway {
     );
 
     if (!response.ok) {
-      return { items: [], nextCursor: null, hasNextPage: false };
+      throw new Error(`Failed to fetch feed (${response.status})`);
     }
 
     return (await response.json()) as FeedResponse;

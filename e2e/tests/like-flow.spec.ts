@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const unique = () => `user-${Date.now()}`;
+const unique = () => `user-${Date.now()}-${Math.floor(Math.random() * 10_000)}`;
 
 test('register, create a blog, like it from detail page, and verify count increments', async ({ page }) => {
   const email = `${unique()}@test.com`;

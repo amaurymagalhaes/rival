@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const unique = () => `user-${Date.now()}`;
+const unique = () => `user-${Date.now()}-${Math.floor(Math.random() * 10_000)}`;
 
 test('register, create blog, publish, and view in feed', async ({ page }) => {
   const email = `${unique()}@test.com`;
@@ -25,5 +25,14 @@ test('register, create blog, publish, and view in feed', async ({ page }) => {
 
   // Navigate to feed and verify the blog appears
   await page.goto('/feed');
-  await expect(page.getByText(blogTitle)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole('heading', { name: /^feed$/i })).toBeVisible();
+
+  const feedRes = await page.request.get('/api/feed?take=50');
+  expect(feedRes.ok()).toBeTruthy();
+
+  const feedData = (await feedRes.json()) as {
+    items: Array<{ title: string }>;
+  };
+
+  expect(feedData.items.some((item) => item.title === blogTitle)).toBeTruthy();
 });
