@@ -5,6 +5,7 @@ import { MessageCircle } from 'lucide-react';
 import { getBlogBySlug, getLikeStatus } from '@/app/actions/feed';
 import { getToken } from '@/lib/auth';
 import { LikeButton } from '@/components/LikeButton';
+import { AiDetectorButton } from '@/components/AiDetectorButton';
 import { CommentList } from '@/components/CommentList';
 import { CommentForm } from '@/components/CommentForm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -70,6 +71,9 @@ export default async function BlogDetailPage({ params }: Props) {
             <span className="tabular-nums">{blog._count.comments}</span>
             {blog._count.comments === 1 ? 'comment' : 'comments'}
           </span>
+          <div className="ml-auto">
+            <AiDetectorButton content={blog.content} />
+          </div>
         </div>
       </article>
 
