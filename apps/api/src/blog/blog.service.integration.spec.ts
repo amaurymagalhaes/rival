@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlogSummaryProducer } from '../queue/producers/blog-summary.producer';
+import { mockLoggerProvider } from '../common/logger/logger.test-utils';
 
 describe('BlogService (queue integration)', () => {
   let service: BlogService;
@@ -27,6 +28,7 @@ describe('BlogService (queue integration)', () => {
         BlogService,
         { provide: PrismaService, useValue: prisma },
         { provide: BlogSummaryProducer, useValue: summaryProducer },
+        mockLoggerProvider(BlogService.name),
       ],
     }).compile();
 
