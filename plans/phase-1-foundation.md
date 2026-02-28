@@ -30,7 +30,7 @@ Phase 1 is infrastructure-only — no feature code, so no Red-Green-Refactor yet
 ### 1. Create Monorepo
 
 ```bash
-mkdir rival-blog && cd rival-blog
+mkdir hyperblog-blog && cd hyperblog-blog
 pnpm init
 mkdir -p apps/api apps/web packages/shared/src
 ```
@@ -82,7 +82,7 @@ npx shadcn@latest add button input card skeleton textarea label
 
 ### 4. Provision Neon Database
 
-1. Create Neon project "rival-blog"
+1. Create Neon project "hyperblog-blog"
 2. Copy connection string (includes `?sslmode=require`)
 3. Set in `apps/api/.env`: `DATABASE_URL=postgresql://...`
 

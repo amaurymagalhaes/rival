@@ -88,7 +88,7 @@ A **shared `ioredis` instance** injected via a `RedisModule`, reusable by both t
 Redis keys will follow the pattern:
 
 ```
-rival-blog:throttle:{tracker}:{ttl}:{limit}:{key}
+hyperblog-blog:throttle:{tracker}:{ttl}:{limit}:{key}
 ```
 
 Where:
@@ -119,7 +119,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
 REDIS_DB=0
-REDIS_KEY_PREFIX=rival-blog:
+REDIS_KEY_PREFIX=hyperblog-blog:
 
 # Rate Limiting
 RATE_LIMIT_ENABLED=true
@@ -169,7 +169,7 @@ import Redis from 'ioredis';
           ? new Redis(redisUrl, {
               maxRetriesPerRequest: 3,
               lazyConnect: true,
-              keyPrefix: process.env.REDIS_KEY_PREFIX ?? 'rival-blog:',
+              keyPrefix: process.env.REDIS_KEY_PREFIX ?? 'hyperblog-blog:',
             })
           : new Redis({
               host: process.env.REDIS_HOST ?? 'localhost',
@@ -178,7 +178,7 @@ import Redis from 'ioredis';
               db: Number(process.env.REDIS_DB) || 0,
               maxRetriesPerRequest: 3,
               lazyConnect: true,
-              keyPrefix: process.env.REDIS_KEY_PREFIX ?? 'rival-blog:',
+              keyPrefix: process.env.REDIS_KEY_PREFIX ?? 'hyperblog-blog:',
             });
 
         redis.on('connect', () => logger.log('Redis connected'));
@@ -1200,7 +1200,7 @@ export async function createTestRedisClient(): Promise<Redis> {
     host: process.env.REDIS_HOST ?? 'localhost',
     port: Number(process.env.REDIS_PORT) || 6379,
     db: 15, // Use DB 15 for tests to avoid data collision
-    keyPrefix: 'test:rival-blog:',
+    keyPrefix: 'test:hyperblog-blog:',
   });
 
   await redis.flushdb();

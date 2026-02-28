@@ -1,5 +1,5 @@
 {
-  "name": "rival-blog",
+  "name": "hyperblog-blog",
   "private": true,
   "scripts": {
     "dev": "pnpm --filter './apps/*' --parallel dev",

@@ -90,7 +90,7 @@ The `pino-http` middleware runs first (before guards) and creates a child logger
 All test files reference `nestjs-pino` and `pino` types, so they need to be installed before tests can even compile.
 
 ```bash
-cd /home/amaury/rival-assessment/apps/api
+cd /home/amaury/hyperblog-assessment/apps/api
 pnpm add nestjs-pino pino pino-http
 pnpm add -D pino-pretty @types/uuid
 ```

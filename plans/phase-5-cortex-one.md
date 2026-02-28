@@ -2,7 +2,7 @@
 
 ## Objective
 
-Sign up for Cortex One at cortexone.rival.io, explore the platform, and create a meaningful function that demonstrates product thinking, system design, practical usefulness, and code quality.
+Sign up for Cortex One at cortexone.hyperblog.io, explore the platform, and create a meaningful function that demonstrates product thinking, system design, practical usefulness, and code quality.
 
 ## Time Breakdown
 
@@ -68,7 +68,7 @@ The function is evaluated on:
 
 ## Acceptance Criteria
 
-- [ ] Account created on cortexone.rival.io
+- [ ] Account created on cortexone.hyperblog.io
 - [ ] Function created and working
 - [ ] Code is clean and well-structured
 - [ ] Function serves a practical, clearly explained purpose

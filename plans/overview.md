@@ -59,7 +59,7 @@ Build a production-ready blog platform with user authentication, blog CRUD, publ
 ## Monorepo Structure
 
 ```
-rival-blog/
+hyperblog-blog/
 ├── apps/
 │   ├── api/          # NestJS backend (13 endpoints)
 │   └── web/          # Next.js 15 frontend (App Router)

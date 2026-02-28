@@ -41,8 +41,8 @@ describe('Home page', () => {
     expect(screen.getByText(/your next post is waiting/i)).toBeInTheDocument();
   });
 
-  it('uses HyperBlog branding, not Rival', () => {
+  it('uses HyperBlog branding, not HyperBlog', () => {
     render(<Home />);
-    expect(screen.queryByText('Rival')).not.toBeInTheDocument();
+    expect(screen.queryByText('HyperBlog')).not.toBeInTheDocument();
   });
 });

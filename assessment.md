@@ -1,4 +1,4 @@
-Rival Assessment
+HyperBlog Assessment
 Secure Blog Platform (Public + Private + Social Feed)
 
 Objective
@@ -235,7 +235,7 @@ What you would improve
 How you'd scale to 1M users
 
 As part of this project, please:
-Visit https://cortexone.rival.io
+Visit https://cortexone.hyperblog.io
 Sign up for an account
 Create a meaningful function of your choice
 There are no restrictions on what you build — we encourage you to think creatively and design something that genuinely improves the platform (e.g., AI-powered tools, automation workflows, analytics, optimization utilities, etc.).

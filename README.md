@@ -1,4 +1,4 @@
-# Rival — Secure Blog Platform
+# HyperBlog — Secure Blog Platform
 
 A production-ready blogging platform with user authentication, a private dashboard, public feed, and social features (likes and comments).
 
@@ -30,7 +30,7 @@ A production-ready blogging platform with user authentication, a private dashboa
 ## Architecture
 
 ```
-rival-assessment/
+hyperblog-assessment/
 ├── apps/
 │   ├── api/          # NestJS backend
 │   │   ├── src/
@@ -125,7 +125,7 @@ The API runs on `http://localhost:4000` and the web app on `http://localhost:300
 
 ```bash
 # Build the API image from monorepo root
-docker build -f apps/api/Dockerfile -t rival-api .
+docker build -f apps/api/Dockerfile -t hyperblog-api .
 
 # Run the container
 docker run --rm -p 4000:4000 \
@@ -133,7 +133,7 @@ docker run --rm -p 4000:4000 \
   -e JWT_SECRET="your-secret-key" \
   -e FRONTEND_URL="http://localhost:3000" \
   -e REDIS_URL="redis://localhost:6379" \
-  rival-api
+  hyperblog-api
 ```
 
 For Railway Docker deployment:

@@ -1,6 +1,6 @@
 # Blog SEO Analyzer — Cortex One Function
 
-A standalone TypeScript function that analyzes blog post content and returns structured SEO insights. Designed to be pasted directly into [Cortex One](https://cortexone.rival.io) as a custom function with zero external dependencies.
+A standalone TypeScript function that analyzes blog post content and returns structured SEO insights. Designed to be pasted directly into [Cortex One](https://cortexone.hyperblog.io) as a custom function with zero external dependencies.
 
 ## What It Does
 

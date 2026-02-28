@@ -1,4 +1,4 @@
-# Rival Assessment - Non-Technical QA Checklist
+# HyperBlog Assessment - Non-Technical QA Checklist
 
 This checklist is based on the requirements in `assessment.md`.
 Use it from the frontend only.
@@ -153,7 +153,7 @@ If ENV-04 fails, stop and report environment issue before continuing.
 - [x] SUBMIT-04 README includes setup, architecture, tradeoffs, improvements, scale notes.
 - [ ] SUBMIT-05 Public repo URL and live app URL are ready.
 - [x] SUBMIT-06 CortexOne task completed.
-- [ ] SUBMIT-07 Signed up at `https://cortexone.rival.io`.
+- [ ] SUBMIT-07 Signed up at `https://cortexone.hyperblog.io`.
 - [x] SUBMIT-08 Created one meaningful function in CortexOne.
 
 ---
