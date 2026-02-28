@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import { AppService } from './app.service';
 import { Public } from './common/decorators/public.decorator';
 import { QUEUE_NAMES } from './queue/queue.constants';
+import { SkipRateLimit } from './rate-limiting';
 
 @Controller()
 export class AppController {
@@ -14,12 +15,14 @@ export class AppController {
 
   @Get()
   @Public()
+  @SkipRateLimit()
   getHello(): string {
     return this.appService.getHello();
   }
 
   @Get('health')
   @Public()
+  @SkipRateLimit()
   async health() {
     const client = await this.summaryQueue.client;
     const redisStatus = client.status;

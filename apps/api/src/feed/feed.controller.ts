@@ -2,8 +2,10 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { BlogService } from '../blog/blog.service';
 import { Public } from '../common/decorators/public.decorator';
+import { RateLimit } from '../rate-limiting';
 
 @Public()
+@RateLimit('generous')
 @Controller('public')
 export class FeedController {
   constructor(

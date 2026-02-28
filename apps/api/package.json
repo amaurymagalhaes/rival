@@ -29,6 +29,7 @@
     "@bull-board/api": "^6.20.3",
     "@bull-board/express": "^6.20.3",
     "@bull-board/nestjs": "^6.20.3",
+    "@nest-lab/throttler-storage-redis": "^1.2.0",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",

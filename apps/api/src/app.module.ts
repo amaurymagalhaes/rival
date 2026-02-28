@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
@@ -17,11 +16,15 @@ import { QUEUE_NAMES } from './queue/queue.constants';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { loggerConfig } from './common/logger/logger.config';
+import { RedisModule } from './redis';
+import { RateLimitingModule, TieredThrottlerGuard } from './rate-limiting';
 
 @Module({
   imports: [
     LoggerModule.forRoot(loggerConfig),
     PrismaModule,
+    RedisModule,
+    RateLimitingModule,
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST ?? 'localhost',
@@ -32,7 +35,6 @@ import { loggerConfig } from './common/logger/logger.config';
       },
     }),
     BullModule.registerQueue({ name: QUEUE_NAMES.BLOG_SUMMARY }),
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 60 }]),
     AuthModule,
     BlogModule,
     FeedModule,
@@ -44,7 +46,7 @@ import { loggerConfig } from './common/logger/logger.config';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: TieredThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
