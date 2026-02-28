@@ -7,4 +7,6 @@ export default defineConfig({
   ],
   use: { baseURL: "http://localhost:3000" },
   testDir: "./e2e/tests",
+  testMatch: "*.spec.ts",
+  timeout: 60000,
 });

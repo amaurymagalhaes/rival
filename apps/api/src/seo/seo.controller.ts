@@ -1,7 +1,7 @@
 import { Controller, Post, Param, Req } from '@nestjs/common';
 import { SeoService } from './seo.service';
 import { BlogService } from '../blog/blog.service';
-import { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('blogs')
 export class SeoController {

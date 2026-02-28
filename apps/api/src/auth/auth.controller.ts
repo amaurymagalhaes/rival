@@ -18,14 +18,14 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Throttle([{ name: 'default', ttl: 60000, limit: 5 }])
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Public()
-  @Throttle([{ name: 'default', ttl: 60000, limit: 5 }])
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto) {

@@ -26,7 +26,7 @@ export class BlogService {
         },
       });
     } catch (error: any) {
-      if (error.code === 'P2002' && error.meta?.target?.includes('slug')) {
+      if (error.code === 'P2002') {
         return await this.prisma.blog.create({
           data: {
             title: dto.title,

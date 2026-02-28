@@ -56,6 +56,7 @@ export async function createBlog(
   }
 
   revalidatePath('/dashboard');
+  revalidatePath('/feed');
   redirect('/dashboard');
 }
 
@@ -83,6 +84,7 @@ export async function updateBlog(
   }
 
   revalidatePath('/dashboard');
+  revalidatePath('/feed');
   redirect('/dashboard');
 }
 
@@ -99,5 +101,6 @@ export async function deleteBlog(id: string): Promise<{ error?: string }> {
   }
 
   revalidatePath('/dashboard');
+  revalidatePath('/feed');
   return {};
 }
