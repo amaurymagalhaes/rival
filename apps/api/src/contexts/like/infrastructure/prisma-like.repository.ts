@@ -40,4 +40,13 @@ export class PrismaLikeRepository implements LikeRepository {
   countByBlogId(blogId: string): Promise<number> {
     return this.prisma.like.count({ where: { blogId } });
   }
+
+  async hasLiked(blogId: string, userId: string): Promise<boolean> {
+    const like = await this.prisma.like.findUnique({
+      where: { userId_blogId: { userId, blogId } },
+      select: { id: true },
+    });
+
+    return like !== null;
+  }
 }

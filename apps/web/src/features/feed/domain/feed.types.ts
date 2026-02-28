@@ -32,3 +32,8 @@ export type Comment = {
   createdAt: string;
   user: { id: string; name: string };
 };
+
+export type LikeStatus = {
+  liked: boolean;
+  likeCount: number;
+};

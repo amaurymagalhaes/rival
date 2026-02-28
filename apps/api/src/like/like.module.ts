@@ -7,6 +7,7 @@ import { LIKE_REPOSITORY } from '../contexts/like/domain/like.tokens';
 import { PrismaLikeRepository } from '../contexts/like/infrastructure/prisma-like.repository';
 import { LikeBlogUseCase } from '../contexts/like/application/use-cases/like-blog.use-case';
 import { UnlikeBlogUseCase } from '../contexts/like/application/use-cases/unlike-blog.use-case';
+import { GetLikeStatusUseCase } from '../contexts/like/application/use-cases/get-like-status.use-case';
 
 @Module({
   controllers: [LikeController],
@@ -28,6 +29,12 @@ import { UnlikeBlogUseCase } from '../contexts/like/application/use-cases/unlike
       inject: [LIKE_REPOSITORY],
       useFactory: (repository: LikeRepository) =>
         new UnlikeBlogUseCase(repository),
+    },
+    {
+      provide: GetLikeStatusUseCase,
+      inject: [LIKE_REPOSITORY],
+      useFactory: (repository: LikeRepository) =>
+        new GetLikeStatusUseCase(repository),
     },
   ],
 })

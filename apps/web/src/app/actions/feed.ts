@@ -8,6 +8,7 @@ import type {
   FeedResponse,
 } from '@/features/feed/domain/feed.types';
 import {
+  getBlogLikeStatus,
   getBlogCommentsBySlug,
   getPublicFeed,
   getPublishedBlogBySlug,
@@ -18,7 +19,7 @@ import {
 export type { FeedItem, FeedResponse, BlogDetail, Comment } from '@/features/feed/domain/feed.types';
 
 export async function getFeed(cursor?: string): Promise<FeedResponse> {
-  return getPublicFeed({ cursor });
+  return getPublicFeed({ cursor }, 'no-store');
 }
 
 export async function getBlogBySlug(slug: string): Promise<BlogDetail | null> {
@@ -34,6 +35,12 @@ export async function toggleLike(
 
   revalidatePath('/feed');
   revalidatePath('/blogs', 'layout');
+}
+
+export async function getLikeStatus(blogId: string): Promise<{ liked: boolean }> {
+  const headers = await getAuthHeaders();
+  const status = await getBlogLikeStatus(blogId, headers);
+  return { liked: status.liked };
 }
 
 export type CommentFormState = {

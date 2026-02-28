@@ -6,6 +6,7 @@ import { mockLoggerProvider } from '../common/logger/logger.test-utils';
 import { PrismaLikeRepository } from '../contexts/like/infrastructure/prisma-like.repository';
 import { LikeBlogUseCase } from '../contexts/like/application/use-cases/like-blog.use-case';
 import { UnlikeBlogUseCase } from '../contexts/like/application/use-cases/unlike-blog.use-case';
+import { GetLikeStatusUseCase } from '../contexts/like/application/use-cases/get-like-status.use-case';
 
 describe('LikeService', () => {
   let service: LikeService;
@@ -17,6 +18,7 @@ describe('LikeService', () => {
         create: jest.fn(),
         delete: jest.fn(),
         count: jest.fn(),
+        findUnique: jest.fn(),
       },
     };
 
@@ -41,6 +43,12 @@ describe('LikeService', () => {
           inject: [PrismaLikeRepository],
           useFactory: (repository: PrismaLikeRepository) =>
             new UnlikeBlogUseCase(repository),
+        },
+        {
+          provide: GetLikeStatusUseCase,
+          inject: [PrismaLikeRepository],
+          useFactory: (repository: PrismaLikeRepository) =>
+            new GetLikeStatusUseCase(repository),
         },
         mockLoggerProvider(LikeService.name),
       ],
@@ -88,5 +96,14 @@ describe('LikeService', () => {
     const result = await service.unlike('blog-1', 'user-1');
 
     expect(result).toEqual({ liked: false, likeCount: 0 });
+  });
+
+  it('getStatus should return liked=true when a like exists', async () => {
+    prisma.like.findUnique.mockResolvedValue({ id: 'like-1' });
+    prisma.like.count.mockResolvedValue(7);
+
+    const result = await service.getStatus('blog-1', 'user-1');
+
+    expect(result).toEqual({ liked: true, likeCount: 7 });
   });
 });

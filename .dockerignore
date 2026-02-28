@@ -1,0 +1,23 @@
+# VCS and local tooling
+.git
+.gitignore
+.claude
+
+# Dependencies and build artifacts
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/test-results
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Repo folders not needed for API image build
+apps/web
+e2e
+cortex-one
+plans

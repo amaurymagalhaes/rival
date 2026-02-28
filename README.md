@@ -121,6 +121,25 @@ pnpm dev
 
 The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`.
 
+### Run API with Docker
+
+```bash
+# Build the API image from monorepo root
+docker build -f apps/api/Dockerfile -t rival-api .
+
+# Run the container
+docker run --rm -p 4000:4000 \
+  -e DATABASE_URL="postgresql://..." \
+  -e JWT_SECRET="your-secret-key" \
+  -e FRONTEND_URL="http://localhost:3000" \
+  -e REDIS_URL="redis://localhost:6379" \
+  rival-api
+```
+
+For Railway Docker deployment:
+- `Dockerfile path`: `apps/api/Dockerfile`
+- `Build context`: repository root (`.`)
+
 ## API Endpoints
 
 | Method | Path | Auth | Description |

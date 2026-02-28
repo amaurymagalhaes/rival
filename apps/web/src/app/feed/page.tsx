@@ -11,6 +11,8 @@ export const metadata = {
   description: 'Browse the latest blog posts',
 };
 
+export const dynamic = 'force-dynamic';
+
 async function FeedContent() {
   const data = await getFeed();
 

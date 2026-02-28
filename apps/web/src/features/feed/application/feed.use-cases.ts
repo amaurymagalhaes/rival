@@ -1,5 +1,5 @@
 import type { FeedGateway } from '../domain/feed.gateway';
-import type { BlogDetail, Comment, FeedResponse } from '../domain/feed.types';
+import type { BlogDetail, Comment, FeedResponse, LikeStatus } from '../domain/feed.types';
 import {
   type FeedCacheMode,
   hasAuthorizationHeader,
@@ -43,6 +43,21 @@ export class FeedUseCases {
     }
 
     return this.gateway.toggleBlogLike(blogId, newLiked, headers);
+  }
+
+  getBlogLikeStatus(
+    blogId: string,
+    headers: Record<string, string>,
+  ): Promise<LikeStatus> {
+    if (!isValidBlogId(blogId)) {
+      return Promise.resolve({ liked: false, likeCount: 0 });
+    }
+
+    if (!hasAuthorizationHeader(headers)) {
+      return Promise.resolve({ liked: false, likeCount: 0 });
+    }
+
+    return this.gateway.getBlogLikeStatus(blogId, headers);
   }
 
   postBlogComment(

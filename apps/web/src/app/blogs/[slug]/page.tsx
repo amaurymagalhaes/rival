@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { MessageCircle } from 'lucide-react';
-import { getBlogBySlug } from '@/app/actions/feed';
+import { getBlogBySlug, getLikeStatus } from '@/app/actions/feed';
 import { getToken } from '@/lib/auth';
 import { LikeButton } from '@/components/LikeButton';
 import { CommentList } from '@/components/CommentList';
@@ -14,6 +14,8 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric',
 });
+
+export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -40,6 +42,9 @@ export default async function BlogDetailPage({ params }: Props) {
   if (!blog) notFound();
 
   const isLoggedIn = !!token;
+  const likeStatus = isLoggedIn
+    ? await getLikeStatus(blog.id)
+    : { liked: false };
 
   return (
     <main className="page-shell space-y-6 py-8">
@@ -57,7 +62,7 @@ export default async function BlogDetailPage({ params }: Props) {
         <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-border/75 pt-5">
           <LikeButton
             blogId={blog.id}
-            initialLiked={false}
+            initialLiked={likeStatus.liked}
             initialCount={blog._count.likes}
           />
           <span className="inline-flex items-center gap-1 rounded-lg bg-accent/75 px-2.5 py-1 text-sm text-accent-foreground">

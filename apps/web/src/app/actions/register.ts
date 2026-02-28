@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import { registerUser } from '@/features/auth';
 import type { RegisterInput } from '@/features/auth/domain/auth.types';
 import { setAuthCookies } from '@/lib/cookies';
@@ -57,6 +57,7 @@ export async function register(
 
     redirect('/dashboard');
   } catch (error) {
+    unstable_rethrow(error);
     console.error('Registration request failed before reaching API', {
       error,
       email,

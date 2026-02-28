@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { LikeBlogUseCase } from '../contexts/like/application/use-cases/like-blog.use-case';
 import { UnlikeBlogUseCase } from '../contexts/like/application/use-cases/unlike-blog.use-case';
+import { GetLikeStatusUseCase } from '../contexts/like/application/use-cases/get-like-status.use-case';
 import { DuplicateLikeError } from '../contexts/like/domain/like.errors';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class LikeService {
     private readonly logger: PinoLogger,
     private readonly likeBlogUseCase: LikeBlogUseCase,
     private readonly unlikeBlogUseCase: UnlikeBlogUseCase,
+    private readonly getLikeStatusUseCase: GetLikeStatusUseCase,
   ) {}
 
   async like(blogId: string, userId: string) {
@@ -32,5 +34,9 @@ export class LikeService {
     const likeCount = result.likeCount;
     this.logger.debug({ blogId, userId, likeCount }, 'Blog unliked');
     return result;
+  }
+
+  async getStatus(blogId: string, userId: string) {
+    return this.getLikeStatusUseCase.execute(blogId, userId);
   }
 }

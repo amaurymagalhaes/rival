@@ -1,4 +1,4 @@
-import type { BlogDetail, Comment, FeedResponse } from './feed.types';
+import type { BlogDetail, Comment, FeedResponse, LikeStatus } from './feed.types';
 import type { FeedCacheMode, FeedQuery } from './feed.rules';
 
 export interface FeedGateway {
@@ -12,6 +12,10 @@ export interface FeedGateway {
     newLiked: boolean,
     headers: Record<string, string>,
   ): Promise<void>;
+  getBlogLikeStatus(
+    blogId: string,
+    headers: Record<string, string>,
+  ): Promise<LikeStatus>;
   postBlogComment(
     blogId: string,
     content: string,

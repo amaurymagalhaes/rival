@@ -1,6 +1,6 @@
 import { createApiUrl } from '@/lib/api';
 import type { FeedGateway } from '../domain/feed.gateway';
-import type { BlogDetail, Comment, FeedResponse } from '../domain/feed.types';
+import type { BlogDetail, Comment, FeedResponse, LikeStatus } from '../domain/feed.types';
 import type { FeedCacheMode, FeedQuery } from '../domain/feed.rules';
 
 function parseErrorMessage(data: unknown, fallback: string): string {
@@ -42,7 +42,7 @@ export class HttpFeedGateway implements FeedGateway {
 
   async getPublishedBlogBySlug(slug: string): Promise<BlogDetail | null> {
     const response = await fetch(createApiUrl(`/public/blogs/${slug}`), {
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
 
     if (!response.ok) return null;
@@ -54,10 +54,30 @@ export class HttpFeedGateway implements FeedGateway {
     newLiked: boolean,
     headers: Record<string, string>,
   ): Promise<void> {
-    await fetch(createApiUrl(`/blogs/${blogId}/like`), {
+    const response = await fetch(createApiUrl(`/blogs/${blogId}/like`), {
       method: newLiked ? 'POST' : 'DELETE',
       headers,
     });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle like');
+    }
+  }
+
+  async getBlogLikeStatus(
+    blogId: string,
+    headers: Record<string, string>,
+  ): Promise<LikeStatus> {
+    const response = await fetch(createApiUrl(`/blogs/${blogId}/like/status`), {
+      headers,
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return { liked: false, likeCount: 0 };
+    }
+
+    return (await response.json()) as LikeStatus;
   }
 
   async postBlogComment(
@@ -81,7 +101,7 @@ export class HttpFeedGateway implements FeedGateway {
 
   async getBlogCommentsBySlug(slug: string): Promise<Comment[]> {
     const response = await fetch(createApiUrl(`/public/blogs/${slug}/comments`), {
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
     if (!response.ok) return [];
     return (await response.json()) as Comment[];
