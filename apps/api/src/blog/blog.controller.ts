@@ -13,7 +13,6 @@ import {
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
-import { Public } from '../common/decorators/public.decorator';
 
 @Controller('blogs')
 export class BlogController {
@@ -43,16 +42,5 @@ export class BlogController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string, @Req() req: any) {
     await this.blogService.delete(id, req.user.id);
-  }
-}
-
-@Controller('public/blogs')
-export class PublicBlogController {
-  constructor(private blogService: BlogService) {}
-
-  @Public()
-  @Get(':slug')
-  findBySlug(@Param('slug') slug: string) {
-    return this.blogService.findBySlug(slug);
   }
 }

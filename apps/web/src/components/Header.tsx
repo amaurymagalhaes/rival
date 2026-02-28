@@ -13,6 +13,11 @@ export async function Header() {
           Rival
         </Link>
         <nav className="flex items-center gap-4">
+          <Link href="/feed">
+            <Button variant="ghost" size="sm">
+              Feed
+            </Button>
+          </Link>
           {user ? (
             <>
               <Link href="/dashboard">
