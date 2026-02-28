@@ -30,7 +30,7 @@ A production-ready blogging platform with user authentication, a private dashboa
 ## Architecture
 
 ```
-rival-blog/
+rival-assessment/
 ├── apps/
 │   ├── api/          # NestJS backend
 │   │   ├── src/
@@ -100,7 +100,7 @@ JWT_SECRET="your-secret-key"
 
 **apps/web/.env.local**
 ```
-API_URL="http://localhost:3001"
+API_URL="http://localhost:4000"
 ```
 
 ### Install & Run
@@ -119,7 +119,7 @@ pnpm --filter api prisma:seed
 pnpm dev
 ```
 
-The API runs on `http://localhost:3001` and the web app on `http://localhost:3000`.
+The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`.
 
 ## API Endpoints
 

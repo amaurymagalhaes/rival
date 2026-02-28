@@ -22,7 +22,7 @@ Never write implementation code without a failing test driving it.
 ## Stack
 
 - **Backend**: NestJS, Prisma, PostgreSQL (Neon)
-- **Frontend**: Next.js 15 (App Router, Server Components, Server Actions)
+- **Frontend**: Next.js 16 (App Router, Server Components, Server Actions)
 - **Testing**: Jest (backend + frontend), Playwright (E2E)
 - **Monorepo**: pnpm workspaces
 

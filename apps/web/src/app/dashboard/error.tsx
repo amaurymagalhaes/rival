@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardError({
@@ -9,6 +10,10 @@ export default function DashboardError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
       <div className="flex flex-col items-center justify-center py-16 text-center">

@@ -20,7 +20,7 @@ describe('middleware', () => {
     middleware(request);
 
     expect(NextResponse.redirect).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: '/login' }),
+      expect.objectContaining({ href: 'http://localhost:3000/login' }),
     );
   });
 });

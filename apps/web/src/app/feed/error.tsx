@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 export default function FeedError({
@@ -9,6 +10,10 @@ export default function FeedError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
       <div className="flex flex-col items-center justify-center py-16 text-center">
