@@ -139,6 +139,7 @@ The API runs on `http://localhost:4000` and the web app on `http://localhost:300
 | POST | `/blogs/:id/like` | JWT | Like a blog |
 | DELETE | `/blogs/:id/like` | JWT | Unlike a blog |
 | POST | `/blogs/:id/comments` | JWT | Post a comment on a blog |
+| POST | `/blogs/:id/seo-analysis` | JWT | Analyze SEO for a blog (owner only) |
 
 ## Test Commands
 

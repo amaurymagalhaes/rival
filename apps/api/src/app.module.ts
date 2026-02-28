@@ -9,6 +9,7 @@ import { BlogModule } from './blog/blog.module';
 import { FeedModule } from './feed/feed.module';
 import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
+import { SeoModule } from './seo/seo.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     FeedModule,
     LikeModule,
     CommentModule,
+    SeoModule,
   ],
   controllers: [AppController],
   providers: [
