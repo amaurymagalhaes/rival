@@ -143,25 +143,22 @@ function analyzeReadability(words: string[], sentences: string[]): ReadabilityRe
   const avgWordsPerSentence = totalWords / totalSentences;
   const avgSyllablesPerWord = totalSyllables / Math.max(totalWords, 1);
 
-  // Flesch-Kincaid Grade Level
-  const score =
-    0.39 * avgWordsPerSentence +
-    11.8 * avgSyllablesPerWord -
-    15.59;
-
-  const rounded = Math.round(score * 10) / 10;
+  // Flesch Reading Ease (0-100, higher = easier to read)
+  const rawScore =
+    206.835 - 1.015 * avgWordsPerSentence - 84.6 * avgSyllablesPerWord;
+  const score = Math.round(Math.max(0, Math.min(100, rawScore)));
 
   let level: "Easy" | "Moderate" | "Difficult";
-  if (rounded <= 6) {
+  if (score >= 60) {
     level = "Easy";
-  } else if (rounded <= 10) {
+  } else if (score >= 30) {
     level = "Moderate";
   } else {
     level = "Difficult";
   }
 
   return {
-    score: rounded,
+    score,
     level,
     avgWordsPerSentence: Math.round(avgWordsPerSentence * 10) / 10,
     avgSyllablesPerWord: Math.round(avgSyllablesPerWord * 100) / 100,
@@ -270,7 +267,7 @@ function buildSuggestions(
 
   if (readability.level === "Difficult") {
     suggestions.push(
-      "Readability is high — try shorter sentences and simpler words to reach a wider audience."
+      "Readability score is low — try shorter sentences and simpler words to reach a wider audience."
     );
   }
 

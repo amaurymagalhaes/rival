@@ -100,7 +100,7 @@ export function SeoPanel({ blogId }: SeoPanelProps) {
               <section>
                 <h3 className="mb-2 font-semibold">Top Keywords</h3>
                 <div>
-                  {analysis.keywords.topKeywords.slice(0, 5).map((kw) => (
+                  {analysis.keywords.topKeywords.map((kw) => (
                     <KeywordRow key={kw.word} {...kw} />
                   ))}
                 </div>

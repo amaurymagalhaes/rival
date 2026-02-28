@@ -50,8 +50,9 @@ export interface SeoAnalysis {
 @Injectable()
 export class SeoService {
   analyzeBlog(title: string, content: string, summary?: string): SeoAnalysis {
-    const words = this.extractWords(content);
-    const sentences = this.extractSentences(content);
+    const plainText = this.stripHtml(content);
+    const words = this.extractWords(plainText);
+    const sentences = this.extractSentences(plainText);
     const totalWords = words.length;
 
     const readability = this.analyzeReadability(words, sentences);
@@ -69,6 +70,10 @@ export class SeoService {
       titleAnalysis,
       suggestions,
     };
+  }
+
+  private stripHtml(text: string): string {
+    return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   private extractWords(text: string): string[] {
@@ -121,7 +126,7 @@ export class SeoService {
 
     const topKeywords = [...freq.entries()]
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .slice(0, 5)
       .map(([word, count]) => ({
         word,
         count,
@@ -132,9 +137,9 @@ export class SeoService {
   }
 
   private generateMetaDescription(content: string, summary?: string): string {
-    if (summary) return summary.slice(0, 160);
+    if (summary) return this.stripHtml(summary).slice(0, 160);
 
-    const cleaned = content.replace(/\s+/g, ' ').trim();
+    const cleaned = this.stripHtml(content);
     if (cleaned.length <= 160) return cleaned;
     const truncated = cleaned.slice(0, 157);
     const lastSpace = truncated.lastIndexOf(' ');
@@ -153,13 +158,13 @@ export class SeoService {
 
   private analyzeTitle(title: string): SeoAnalysis['titleAnalysis'] {
     const length = title.length;
-    const isOptimalLength = length >= 30 && length <= 60;
+    const isOptimalLength = length >= 50 && length <= 60;
     const hasNumbers = /\d/.test(title);
     const titleWords = title.toLowerCase().split(/\s+/);
     const hasPowerWords = titleWords.some((w) => POWER_WORDS.has(w));
 
     const suggestions: string[] = [];
-    if (length < 30) suggestions.push('Title is too short. Aim for 30-60 characters.');
+    if (length < 50) suggestions.push('Title is too short. Aim for 50-60 characters for better SEO visibility.');
     if (length > 60) suggestions.push('Title is too long. Keep it under 60 characters for SEO.');
     if (!hasNumbers) suggestions.push('Consider adding numbers to your title for better CTR.');
     if (!hasPowerWords) suggestions.push('Add power words (e.g., "ultimate", "proven", "essential") to make the title more compelling.');
@@ -184,7 +189,7 @@ export class SeoService {
     if (totalWords < 300) {
       suggestions.push('Content is short. Aim for at least 300 words for better SEO.');
     }
-    if (keywords.topKeywords.length > 0 && keywords.topKeywords[0].density > 5) {
+    if (keywords.topKeywords.length > 0 && keywords.topKeywords[0].density > 3) {
       suggestions.push('Top keyword density is high. Avoid keyword stuffing.');
     }
     suggestions.push(...titleAnalysis.suggestions);

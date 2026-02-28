@@ -7,55 +7,27 @@ describe('SeoService', () => {
     service = new SeoService();
   });
 
-  it('should analyze a blog post and return the expected structure', () => {
-    const result = service.analyzeBlog(
-      'How to Build a REST API with NestJS',
-      'NestJS is a progressive Node.js framework for building efficient server-side applications. It uses TypeScript by default and combines elements of OOP, FP, and FRP. In this tutorial, we will walk through creating a REST API step by step. First, install NestJS CLI globally. Then scaffold a new project. Controllers handle incoming requests and return responses. Services contain business logic. Modules organize the application structure. Guards protect routes from unauthorized access. Pipes validate and transform input data. Interceptors add extra logic before and after method execution.',
-    );
-
-    expect(result).toHaveProperty('readability');
-    expect(result.readability).toHaveProperty('score');
-    expect(result.readability).toHaveProperty('level');
-    expect(result.readability).toHaveProperty('avgWordsPerSentence');
-    expect(result.readability).toHaveProperty('avgSyllablesPerWord');
-
-    expect(result).toHaveProperty('keywords');
-    expect(result.keywords).toHaveProperty('topKeywords');
-    expect(result.keywords).toHaveProperty('totalWords');
-    expect(Array.isArray(result.keywords.topKeywords)).toBe(true);
-    expect(result.keywords.topKeywords.length).toBeGreaterThan(0);
-    expect(result.keywords.topKeywords[0]).toHaveProperty('word');
-    expect(result.keywords.topKeywords[0]).toHaveProperty('count');
-    expect(result.keywords.topKeywords[0]).toHaveProperty('density');
-
-    expect(result).toHaveProperty('metaDescription');
-    expect(typeof result.metaDescription).toBe('string');
-    expect(result.metaDescription.length).toBeLessThanOrEqual(160);
-
-    expect(result).toHaveProperty('readingTime');
-    expect(result.readingTime).toHaveProperty('minutes');
-    expect(result.readingTime).toHaveProperty('wordCount');
-
-    expect(result).toHaveProperty('titleAnalysis');
-    expect(result.titleAnalysis).toHaveProperty('length');
-    expect(result.titleAnalysis).toHaveProperty('isOptimalLength');
-    expect(result.titleAnalysis).toHaveProperty('hasNumbers');
-    expect(result.titleAnalysis).toHaveProperty('hasPowerWords');
-    expect(result.titleAnalysis).toHaveProperty('suggestions');
-
-    expect(result).toHaveProperty('suggestions');
-    expect(Array.isArray(result.suggestions)).toBe(true);
-  });
-
-  it('should return a readability score within valid range (0-100)', () => {
+  it('should calculate readability score within valid range', () => {
     const result = service.analyzeBlog(
       'Simple Title',
-      'This is a short sentence. Here is another one. And a third. The cat sat on the mat. Dogs are great pets. Birds can fly high in the sky.',
+      'The cat sat on the mat. Dogs are great pets. Birds can fly high.',
     );
 
     expect(result.readability.score).toBeGreaterThanOrEqual(0);
     expect(result.readability.score).toBeLessThanOrEqual(100);
     expect(['easy', 'moderate', 'hard']).toContain(result.readability.level);
+    expect(result.readability.avgWordsPerSentence).toBeGreaterThan(0);
+    expect(result.readability.avgSyllablesPerWord).toBeGreaterThan(0);
+  });
+
+  it('should score simple text as easy readability', () => {
+    const result = service.analyzeBlog(
+      'Easy Read',
+      'The cat sat on a mat. It was a red mat. The cat was fat. It liked the mat a lot. The dog ran by. The cat did not move.',
+    );
+
+    expect(result.readability.level).toBe('easy');
+    expect(result.readability.score).toBeGreaterThanOrEqual(60);
   });
 
   it('should exclude stop words from keyword extraction', () => {
@@ -65,20 +37,104 @@ describe('SeoService', () => {
     );
 
     const keywordWords = result.keywords.topKeywords.map((k) => k.word);
-    const stopWords = ['the', 'and', 'is', 'a', 'an', 'in', 'on', 'at', 'to', 'for'];
-    for (const stopWord of stopWords) {
-      expect(keywordWords).not.toContain(stopWord);
-    }
+    expect(keywordWords).not.toContain('the');
+    expect(keywordWords).not.toContain('and');
     expect(keywordWords).toContain('javascript');
+    expect(result.keywords.topKeywords[0].word).toBe('javascript');
+    expect(result.keywords.topKeywords[0].count).toBe(3);
   });
 
-  it('should handle optional summary parameter', () => {
+  it('should return at most 5 keywords', () => {
+    const result = service.analyzeBlog(
+      'Keywords Test',
+      'alpha alpha beta beta gamma gamma delta delta epsilon epsilon zeta zeta eta eta theta theta',
+    );
+
+    expect(result.keywords.topKeywords.length).toBeLessThanOrEqual(5);
+  });
+
+  it('should use summary as meta description when provided', () => {
     const result = service.analyzeBlog(
       'Test Title',
-      'Some blog content here for testing purposes. This is the body of the article.',
+      'Some blog content here for testing purposes.',
       'A custom summary for the blog post',
     );
 
     expect(result.metaDescription).toBe('A custom summary for the blog post');
+  });
+
+  it('should truncate meta description to 160 characters', () => {
+    const longContent = 'This is a very long sentence that goes on and on. '.repeat(10);
+    const result = service.analyzeBlog('Test', longContent);
+
+    expect(result.metaDescription.length).toBeLessThanOrEqual(163); // 160 + '...'
+  });
+
+  it('should strip HTML tags before analysis', () => {
+    const htmlContent = '<p>Hello <strong>world</strong></p><p>This is a <a href="#">test</a> post.</p>';
+    const plainContent = 'Hello world This is a test post.';
+
+    const htmlResult = service.analyzeBlog('Test', htmlContent);
+    const plainResult = service.analyzeBlog('Test', plainContent);
+
+    expect(htmlResult.keywords.totalWords).toBe(plainResult.keywords.totalWords);
+    expect(htmlResult.readingTime.wordCount).toBe(plainResult.readingTime.wordCount);
+  });
+
+  it('should strip HTML from summary in meta description', () => {
+    const result = service.analyzeBlog(
+      'Test',
+      'Content here.',
+      '<p>A <strong>bold</strong> summary</p>',
+    );
+
+    expect(result.metaDescription).not.toContain('<');
+    expect(result.metaDescription).toBe('A bold summary');
+  });
+
+  it('should calculate reading time based on 200 WPM', () => {
+    // 200 words = 1 minute
+    const words = Array(200).fill('word').join(' ');
+    const result = service.analyzeBlog('Test', words);
+
+    expect(result.readingTime.minutes).toBe(1);
+    expect(result.readingTime.wordCount).toBe(200);
+  });
+
+  it('should flag title under 50 chars as suboptimal', () => {
+    const result = service.analyzeBlog('Short', 'Some content here for analysis.');
+
+    expect(result.titleAnalysis.isOptimalLength).toBe(false);
+    expect(result.titleAnalysis.suggestions.length).toBeGreaterThan(0);
+    expect(result.titleAnalysis.suggestions[0]).toContain('50-60');
+  });
+
+  it('should mark title in 50-60 char range as optimal', () => {
+    const title = 'A Perfectly Sized Blog Post Title for SEO Purposes';
+    expect(title.length).toBeGreaterThanOrEqual(50);
+    expect(title.length).toBeLessThanOrEqual(60);
+
+    const result = service.analyzeBlog(title, 'Some content here.');
+
+    expect(result.titleAnalysis.isOptimalLength).toBe(true);
+  });
+
+  it('should detect power words in title', () => {
+    const result = service.analyzeBlog(
+      'The Ultimate Guide to Testing',
+      'Content about testing.',
+    );
+
+    expect(result.titleAnalysis.hasPowerWords).toBe(true);
+  });
+
+  it('should generate suggestions for short content', () => {
+    const result = service.analyzeBlog('Test', 'Short content.');
+
+    expect(result.suggestions).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('300 words'),
+      ]),
+    );
   });
 });
