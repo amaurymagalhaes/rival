@@ -8,11 +8,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { LikeService } from './like.service';
+import { RateLimit } from '../rate-limiting';
 
 @Controller('blogs/:id/like')
 export class LikeController {
   constructor(private likeService: LikeService) {}
 
+  @RateLimit('moderate')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   like(@Param('id') blogId: string, @Req() req: any) {

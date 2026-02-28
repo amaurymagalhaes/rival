@@ -11,11 +11,13 @@ import {
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Public } from '../common/decorators/public.decorator';
+import { RateLimit } from '../rate-limiting';
 
 @Controller()
 export class CommentController {
   constructor(private commentService: CommentService) {}
 
+  @RateLimit('moderate')
   @Post('blogs/:id/comments')
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -27,6 +29,7 @@ export class CommentController {
   }
 
   @Public()
+  @RateLimit('generous')
   @Get('public/blogs/:slug/comments')
   findByBlogSlug(@Param('slug') slug: string) {
     return this.commentService.findByBlogSlug(slug);

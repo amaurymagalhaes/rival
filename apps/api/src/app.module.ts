@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -11,11 +10,14 @@ import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
 import { SeoModule } from './seo/seo.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RedisModule } from './redis';
+import { RateLimitingModule, TieredThrottlerGuard } from './rate-limiting';
 
 @Module({
   imports: [
     PrismaModule,
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 60 }]),
+    RedisModule,
+    RateLimitingModule,
     AuthModule,
     BlogModule,
     FeedModule,
@@ -26,7 +28,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: TieredThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })

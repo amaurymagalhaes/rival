@@ -7,25 +7,25 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Public } from '../common/decorators/public.decorator';
+import { RateLimit } from '../rate-limiting';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @RateLimit('strict')
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Public()
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @RateLimit('strict')
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto) {

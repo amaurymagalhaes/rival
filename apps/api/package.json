@@ -26,6 +26,7 @@
     "prisma:seed": "prisma db seed"
   },
   "dependencies": {
+    "@nest-lab/throttler-storage-redis": "^1.2.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
@@ -38,6 +39,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "^8.1.0",
+    "ioredis": "^5.10.0",
     "nanoid": "^3.3.11",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
