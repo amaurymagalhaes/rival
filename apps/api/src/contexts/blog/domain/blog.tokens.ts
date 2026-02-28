@@ -1,0 +1,2 @@
+export const BLOG_REPOSITORY = Symbol('BLOG_REPOSITORY');
+export const BLOG_SUMMARY_JOBS_PORT = Symbol('BLOG_SUMMARY_JOBS_PORT');

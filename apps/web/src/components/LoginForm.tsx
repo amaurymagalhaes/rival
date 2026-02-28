@@ -22,17 +22,19 @@ export function LoginForm() {
   );
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border-border/75">
       <CardHeader>
-        <CardTitle>Login</CardTitle>
+        <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>
-          Enter your credentials to access your account
+          Enter your credentials to access your account.
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
         <CardContent className="flex flex-col gap-4">
           {state?.error && (
-            <p className="text-sm text-destructive">{state.error}</p>
+            <p className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive" aria-live="polite">
+              {state.error}
+            </p>
           )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
@@ -42,6 +44,7 @@ export function LoginForm() {
               type="email"
               required
               autoComplete="email"
+              spellCheck={false}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -57,11 +60,11 @@ export function LoginForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'Logging in...' : 'Login'}
+            {isPending ? 'Logging in…' : 'Login'}
           </Button>
           <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary underline">
+            <Link href="/register" className="font-medium text-primary hover:underline">
               Register
             </Link>
           </p>

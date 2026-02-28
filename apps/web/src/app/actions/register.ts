@@ -1,12 +1,32 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createApiUrl } from '@/lib/api';
+import { registerUser } from '@/features/auth';
+import type { RegisterInput } from '@/features/auth/domain/auth.types';
+import { setAuthCookies } from '@/lib/cookies';
 
 export type RegisterState = {
   error?: string;
 } | null;
+
+function getRegistrationErrorMessage(
+  status: number,
+  apiMessage?: string,
+): string {
+  if (status === 409) {
+    return 'An account with this email already exists';
+  }
+  if (status === 429) {
+    return 'Too many registration attempts. Please wait a minute and try again.';
+  }
+  if (status >= 500) {
+    return 'We could not create your account right now. Please try again shortly.';
+  }
+  if (apiMessage) {
+    return apiMessage;
+  }
+  return 'Unable to complete registration right now. Please try again.';
+}
 
 export async function register(
   _prevState: RegisterState,
@@ -16,34 +36,34 @@ export async function register(
   const password = formData.get('password') as string;
   const name = formData.get('name') as string | null;
 
-  const body: Record<string, string> = { email, password };
+  const body: RegisterInput = { email, password };
   if (name) body.name = name;
 
-  const res = await fetch(createApiUrl('/auth/register'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  try {
+    const result = await registerUser(body);
+    if (!result.ok) {
+      console.error('Registration API returned non-success response', {
+        status: result.status,
+        requestId: result.requestId,
+        apiMessage: result.message,
+        responseSnippet: result.rawBody?.slice(0, 200),
+      });
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 409) {
-      return { error: 'An account with this email already exists' };
+      return { error: getRegistrationErrorMessage(result.status, result.message) };
     }
-    const message =
-      Array.isArray(data.message) ? data.message[0] : data.message;
-    return { error: message || 'Registration failed' };
+
+    const { accessToken, refreshToken } = result.data;
+    await setAuthCookies(accessToken, refreshToken);
+
+    redirect('/dashboard');
+  } catch (error) {
+    console.error('Registration request failed before reaching API', {
+      error,
+      email,
+    });
+    return {
+      error:
+        'Unable to reach the registration service. Please check your connection and try again.',
+    };
   }
-
-  const { accessToken } = await res.json();
-  const cookieStore = await cookies();
-  cookieStore.set('token', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24,
-  });
-
-  redirect('/dashboard');
 }

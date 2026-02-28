@@ -1,31 +1,41 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { ChevronDown, SearchCheck } from 'lucide-react';
 import { analyzeSeo, type SeoAnalysis } from '@/app/actions/seo';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 type SeoPanelProps = {
   blogId: string;
 };
 
 function ScoreBadge({ score }: { score: number }) {
-  let color = 'bg-red-100 text-red-800';
-  if (score >= 60) color = 'bg-green-100 text-green-800';
-  else if (score >= 30) color = 'bg-yellow-100 text-yellow-800';
+  let color = 'bg-destructive/10 text-destructive';
+  if (score >= 60) color = 'bg-emerald-100 text-emerald-700';
+  else if (score >= 30) color = 'bg-amber-100 text-amber-700';
+
   return (
-    <span className={`inline-block rounded px-2 py-1 text-sm font-medium ${color}`}>
+    <span className={`rounded-md px-2.5 py-1 text-sm font-semibold ${color} tabular-nums`}>
       {score}/100
     </span>
   );
 }
 
-function KeywordRow({ word, count, density }: { word: string; count: number; density: number }) {
+function KeywordRow({
+  word,
+  count,
+  density,
+}: {
+  word: string;
+  count: number;
+  density: number;
+}) {
   return (
-    <div className="flex items-center justify-between border-b py-1 last:border-0">
+    <div className="flex items-center justify-between border-b border-border/70 py-2 last:border-0">
       <span className="font-medium">{word}</span>
-      <span className="text-sm text-muted-foreground">
-        {count}x ({density}%)
+      <span className="tabular-nums text-sm text-muted-foreground">
+        {count}× ({density}%)
       </span>
     </div>
   );
@@ -51,96 +61,131 @@ export function SeoPanel({ blogId }: SeoPanelProps) {
   }
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="w-full max-w-3xl space-y-3">
       <Button
         type="button"
         variant="outline"
         onClick={handleAnalyze}
         disabled={isPending}
+        className="inline-flex items-center gap-1.5"
       >
-        {isPending ? 'Analyzing...' : 'Analyze SEO'}
+        <SearchCheck size={16} aria-hidden="true" />
+        {isPending ? 'Analyzing…' : 'Analyze SEO'}
       </Button>
 
-      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      {error && (
+        <p className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive" aria-live="polite">
+          {error}
+        </p>
+      )}
 
       {analysis && (
-        <Card className="mt-4">
-          <CardHeader
-            className="cursor-pointer"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <CardTitle className="flex items-center justify-between text-base">
-              <span>SEO Analysis</span>
-              <span className="text-sm text-muted-foreground">
+        <Card className="border-border/75">
+          <CardContent className="pt-6">
+            <button
+              type="button"
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-xl border border-border/75 bg-white/72 px-4 py-3 text-left transition-[background-color,border-color] hover:bg-accent/55"
+            >
+              <span className="font-semibold">SEO Analysis</span>
+              <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                 {isOpen ? 'Collapse' : 'Expand'}
+                <ChevronDown
+                  size={16}
+                  aria-hidden="true"
+                  className={isOpen ? 'rotate-180' : ''}
+                />
               </span>
-            </CardTitle>
-          </CardHeader>
+            </button>
 
-          {isOpen && (
-            <CardContent className="flex flex-col gap-6">
-              <section>
-                <h3 className="mb-2 font-semibold">Readability</h3>
-                <div className="flex items-center gap-3">
-                  <ScoreBadge score={analysis.readability.score} />
-                  <span className="capitalize">{analysis.readability.level}</span>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Avg {analysis.readability.avgWordsPerSentence} words/sentence,{' '}
-                  {analysis.readability.avgSyllablesPerWord} syllables/word
-                </p>
-              </section>
-
-              <section>
-                <h3 className="mb-2 font-semibold">
-                  Reading Time: {analysis.readingTime.minutes} min ({analysis.readingTime.wordCount} words)
-                </h3>
-              </section>
-
-              <section>
-                <h3 className="mb-2 font-semibold">Top Keywords</h3>
-                <div>
-                  {analysis.keywords.topKeywords.map((kw) => (
-                    <KeywordRow key={kw.word} {...kw} />
-                  ))}
-                </div>
-              </section>
-
-              <section>
-                <h3 className="mb-2 font-semibold">Meta Description</h3>
-                <p className="rounded bg-muted p-2 text-sm">{analysis.metaDescription}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {analysis.metaDescription.length}/160 characters
-                </p>
-              </section>
-
-              <section>
-                <h3 className="mb-2 font-semibold">Title Analysis</h3>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <span className={`rounded px-2 py-0.5 ${analysis.titleAnalysis.isOptimalLength ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {analysis.titleAnalysis.length} chars {analysis.titleAnalysis.isOptimalLength ? '(optimal)' : '(suboptimal)'}
-                  </span>
-                  {analysis.titleAnalysis.hasNumbers && (
-                    <span className="rounded bg-green-100 px-2 py-0.5 text-green-800">Has numbers</span>
-                  )}
-                  {analysis.titleAnalysis.hasPowerWords && (
-                    <span className="rounded bg-green-100 px-2 py-0.5 text-green-800">Has power words</span>
-                  )}
-                </div>
-              </section>
-
-              {analysis.suggestions.length > 0 && (
-                <section>
-                  <h3 className="mb-2 font-semibold">Suggestions</h3>
-                  <ul className="list-inside list-disc space-y-1 text-sm">
-                    {analysis.suggestions.map((s, i) => (
-                      <li key={i}>{s}</li>
-                    ))}
-                  </ul>
+            {isOpen && (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <section className="rounded-xl border border-border/75 bg-white/72 p-4">
+                  <h3 className="text-sm font-semibold">Readability</h3>
+                  <div className="mt-2 flex items-center gap-2">
+                    <ScoreBadge score={analysis.readability.score} />
+                    <span className="capitalize text-sm text-muted-foreground">
+                      {analysis.readability.level}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Avg {analysis.readability.avgWordsPerSentence} words/sentence,
+                    {' '}
+                    {analysis.readability.avgSyllablesPerWord} syllables/word.
+                  </p>
                 </section>
-              )}
-            </CardContent>
-          )}
+
+                <section className="rounded-xl border border-border/75 bg-white/72 p-4">
+                  <h3 className="text-sm font-semibold">Reading Time</h3>
+                  <p className="mt-2 text-2xl font-semibold tabular-nums">
+                    {analysis.readingTime.minutes} min
+                  </p>
+                  <p className="text-sm text-muted-foreground tabular-nums">
+                    {analysis.readingTime.wordCount} words
+                  </p>
+                </section>
+
+                <section className="rounded-xl border border-border/75 bg-white/72 p-4">
+                  <h3 className="text-sm font-semibold">Top Keywords</h3>
+                  <div className="mt-2">
+                    {analysis.keywords.topKeywords.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No dominant keywords yet.</p>
+                    ) : (
+                      analysis.keywords.topKeywords.map((kw) => (
+                        <KeywordRow key={kw.word} {...kw} />
+                      ))
+                    )}
+                  </div>
+                </section>
+
+                <section className="rounded-xl border border-border/75 bg-white/72 p-4">
+                  <h3 className="text-sm font-semibold">Meta Description</h3>
+                  <p className="mt-2 rounded-lg bg-muted/60 p-3 text-sm leading-relaxed">
+                    {analysis.metaDescription}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+                    {analysis.metaDescription.length}/160 characters
+                  </p>
+                </section>
+
+                <section className="rounded-xl border border-border/75 bg-white/72 p-4 sm:col-span-2">
+                  <h3 className="text-sm font-semibold">Title Analysis</h3>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span
+                      className={`rounded-md px-2 py-1 font-semibold ${
+                        analysis.titleAnalysis.isOptimalLength
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}
+                    >
+                      <span className="tabular-nums">{analysis.titleAnalysis.length}</span> chars
+                    </span>
+                    {analysis.titleAnalysis.hasNumbers && (
+                      <span className="rounded-md bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">
+                        Has numbers
+                      </span>
+                    )}
+                    {analysis.titleAnalysis.hasPowerWords && (
+                      <span className="rounded-md bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">
+                        Has power words
+                      </span>
+                    )}
+                  </div>
+                </section>
+
+                {analysis.suggestions.length > 0 && (
+                  <section className="rounded-xl border border-border/75 bg-white/72 p-4 sm:col-span-2">
+                    <h3 className="text-sm font-semibold">Suggestions</h3>
+                    <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm text-muted-foreground">
+                      {analysis.suggestions.map((suggestion, i) => (
+                        <li key={i}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+              </div>
+            )}
+          </CardContent>
         </Card>
       )}
     </div>

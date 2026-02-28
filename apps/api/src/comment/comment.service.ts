@@ -1,54 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { CreateCommentUseCase } from '../contexts/comment/application/use-cases/create-comment.use-case';
+import { GetCommentsByBlogSlugUseCase } from '../contexts/comment/application/use-cases/get-comments-by-blog-slug.use-case';
+import { PublishedBlogNotFoundForCommentError } from '../contexts/comment/domain/comment.errors';
 
 @Injectable()
 export class CommentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly createCommentUseCase: CreateCommentUseCase,
+    private readonly getCommentsByBlogSlugUseCase: GetCommentsByBlogSlugUseCase,
+  ) {}
 
-  async create(blogId: string, userId: string, dto: CreateCommentDto) {
-    const blog = await this.prisma.blog.findUnique({
-      where: { id: blogId },
-      select: { id: true, isPublished: true },
-    });
-    if (!blog || !blog.isPublished) {
+  private toHttpError(error: unknown): never {
+    if (error instanceof PublishedBlogNotFoundForCommentError) {
       throw new NotFoundException('Blog not found');
     }
+    throw error;
+  }
 
-    return this.prisma.comment.create({
-      data: {
-        blogId,
-        userId,
-        content: dto.content,
-      },
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        user: { select: { id: true, name: true } },
-      },
-    });
+  async create(blogId: string, userId: string, dto: CreateCommentDto) {
+    try {
+      return await this.createCommentUseCase.execute(blogId, userId, dto.content);
+    } catch (error) {
+      this.toHttpError(error);
+    }
   }
 
   async findByBlogSlug(slug: string) {
-    const blog = await this.prisma.blog.findUnique({
-      where: { slug },
-      select: { id: true, isPublished: true },
-    });
-
-    if (!blog || !blog.isPublished) {
-      throw new NotFoundException('Blog not found');
+    try {
+      return await this.getCommentsByBlogSlugUseCase.execute(slug);
+    } catch (error) {
+      this.toHttpError(error);
     }
-
-    return this.prisma.comment.findMany({
-      where: { blogId: blog.id },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        user: { select: { id: true, name: true } },
-      },
-    });
   }
 }

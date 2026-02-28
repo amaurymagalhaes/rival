@@ -1,8 +1,8 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createApiUrl } from '@/lib/api';
+import { loginUser } from '@/features/auth';
+import { setAuthCookies } from '@/lib/cookies';
 
 export type LoginState = {
   error?: string;
@@ -15,26 +15,14 @@ export async function login(
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
-  const res = await fetch(createApiUrl('/auth/login'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+  const result = await loginUser({ email, password });
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    return { error: body.message || 'Invalid credentials' };
+  if (!result.ok) {
+    return { error: result.message || 'Invalid credentials' };
   }
 
-  const { accessToken } = await res.json();
-  const cookieStore = await cookies();
-  cookieStore.set('token', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
+  const { accessToken, refreshToken } = result.data;
+  await setAuthCookies(accessToken, refreshToken);
 
   redirect('/dashboard');
 }

@@ -1,0 +1,1 @@
+export const COMMENT_REPOSITORY = Symbol('COMMENT_REPOSITORY');

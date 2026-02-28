@@ -4,6 +4,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BlogSummaryProducer } from '../queue/producers/blog-summary.producer';
 import { ForbiddenException } from '@nestjs/common';
 import { mockLoggerProvider } from '../common/logger/logger.test-utils';
+import { PrismaBlogRepository } from '../contexts/blog/infrastructure/prisma-blog.repository';
+import { BullMqBlogSummaryJobsAdapter } from '../contexts/blog/infrastructure/bullmq-blog-summary-jobs.adapter';
+import { CreateBlogUseCase } from '../contexts/blog/application/use-cases/create-blog.use-case';
+import { FindUserBlogsUseCase } from '../contexts/blog/application/use-cases/find-user-blogs.use-case';
+import { FindUserBlogUseCase } from '../contexts/blog/application/use-cases/find-user-blog.use-case';
+import { FindPublishedBlogBySlugUseCase } from '../contexts/blog/application/use-cases/find-published-blog-by-slug.use-case';
+import { UpdateBlogUseCase } from '../contexts/blog/application/use-cases/update-blog.use-case';
+import { DeleteBlogUseCase } from '../contexts/blog/application/use-cases/delete-blog.use-case';
 
 describe('BlogService', () => {
   let service: BlogService;
@@ -30,6 +38,58 @@ describe('BlogService', () => {
         BlogService,
         { provide: PrismaService, useValue: prisma },
         { provide: BlogSummaryProducer, useValue: summaryProducer },
+        {
+          provide: PrismaBlogRepository,
+          inject: [PrismaService],
+          useFactory: (prismaService: PrismaService) =>
+            new PrismaBlogRepository(prismaService),
+        },
+        {
+          provide: BullMqBlogSummaryJobsAdapter,
+          inject: [BlogSummaryProducer],
+          useFactory: (producer: BlogSummaryProducer) =>
+            new BullMqBlogSummaryJobsAdapter(producer),
+        },
+        {
+          provide: CreateBlogUseCase,
+          inject: [PrismaBlogRepository, BullMqBlogSummaryJobsAdapter],
+          useFactory: (
+            repository: PrismaBlogRepository,
+            summaryJobs: BullMqBlogSummaryJobsAdapter,
+          ) => new CreateBlogUseCase(repository, summaryJobs),
+        },
+        {
+          provide: FindUserBlogsUseCase,
+          inject: [PrismaBlogRepository],
+          useFactory: (repository: PrismaBlogRepository) =>
+            new FindUserBlogsUseCase(repository),
+        },
+        {
+          provide: FindUserBlogUseCase,
+          inject: [PrismaBlogRepository],
+          useFactory: (repository: PrismaBlogRepository) =>
+            new FindUserBlogUseCase(repository),
+        },
+        {
+          provide: FindPublishedBlogBySlugUseCase,
+          inject: [PrismaBlogRepository],
+          useFactory: (repository: PrismaBlogRepository) =>
+            new FindPublishedBlogBySlugUseCase(repository),
+        },
+        {
+          provide: UpdateBlogUseCase,
+          inject: [PrismaBlogRepository, BullMqBlogSummaryJobsAdapter],
+          useFactory: (
+            repository: PrismaBlogRepository,
+            summaryJobs: BullMqBlogSummaryJobsAdapter,
+          ) => new UpdateBlogUseCase(repository, summaryJobs),
+        },
+        {
+          provide: DeleteBlogUseCase,
+          inject: [PrismaBlogRepository],
+          useFactory: (repository: PrismaBlogRepository) =>
+            new DeleteBlogUseCase(repository),
+        },
         mockLoggerProvider(BlogService.name),
       ],
     }).compile();

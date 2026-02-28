@@ -2,31 +2,26 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createApiUrl } from '@/lib/api';
 import { getAuthHeaders } from '@/lib/auth';
+import type { Blog, BlogMutationInput } from '@/features/blogs/domain/blog.types';
+import {
+  createBlogForOwner,
+  deleteBlogForOwner,
+  getBlogByOwner,
+  getBlogsByOwner,
+  updateBlogForOwner,
+} from '@/features/blogs';
 
-export type Blog = {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+export type { Blog } from '@/features/blogs/domain/blog.types';
 
 export async function getBlogs(): Promise<Blog[]> {
   const headers = await getAuthHeaders();
-  const res = await fetch(createApiUrl('/blogs'), { headers });
-  if (!res.ok) return [];
-  return res.json();
+  return getBlogsByOwner(headers);
 }
 
 export async function getBlog(id: string): Promise<Blog | null> {
   const headers = await getAuthHeaders();
-  const res = await fetch(createApiUrl(`/blogs/${id}`), { headers });
-  if (!res.ok) return null;
-  return res.json();
+  return getBlogByOwner(id, headers);
 }
 
 export type BlogFormState = {
@@ -38,21 +33,16 @@ export async function createBlog(
   formData: FormData,
 ): Promise<BlogFormState> {
   const headers = await getAuthHeaders();
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-  const isPublished = formData.get('isPublished') === 'on';
+  const input: BlogMutationInput = {
+    title: formData.get('title') as string,
+    content: formData.get('content') as string,
+    isPublished: formData.get('isPublished') === 'on',
+  };
 
-  const res = await fetch(createApiUrl('/blogs'), {
-    method: 'POST',
-    headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, content, isPublished }),
-  });
+  const result = await createBlogForOwner(input, headers);
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    const message =
-      Array.isArray(data.message) ? data.message[0] : data.message;
-    return { error: message || 'Failed to create blog' };
+  if (!result.ok) {
+    return { error: result.error };
   }
 
   revalidatePath('/dashboard');
@@ -66,21 +56,16 @@ export async function updateBlog(
   formData: FormData,
 ): Promise<BlogFormState> {
   const headers = await getAuthHeaders();
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-  const isPublished = formData.get('isPublished') === 'on';
+  const input: BlogMutationInput = {
+    title: formData.get('title') as string,
+    content: formData.get('content') as string,
+    isPublished: formData.get('isPublished') === 'on',
+  };
 
-  const res = await fetch(createApiUrl(`/blogs/${id}`), {
-    method: 'PATCH',
-    headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, content, isPublished }),
-  });
+  const result = await updateBlogForOwner(id, input, headers);
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    const message =
-      Array.isArray(data.message) ? data.message[0] : data.message;
-    return { error: message || 'Failed to update blog' };
+  if (!result.ok) {
+    return { error: result.error };
   }
 
   revalidatePath('/dashboard');
@@ -90,14 +75,9 @@ export async function updateBlog(
 
 export async function deleteBlog(id: string): Promise<{ error?: string }> {
   const headers = await getAuthHeaders();
-  const res = await fetch(createApiUrl(`/blogs/${id}`), {
-    method: 'DELETE',
-    headers,
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    return { error: data.message || 'Failed to delete blog' };
+  const result = await deleteBlogForOwner(id, headers);
+  if (!result.ok) {
+    return { error: result.error };
   }
 
   revalidatePath('/dashboard');

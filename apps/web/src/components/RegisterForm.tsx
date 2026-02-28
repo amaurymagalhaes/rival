@@ -22,24 +22,21 @@ export function RegisterForm() {
   >(register, null);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border-border/75">
       <CardHeader>
-        <CardTitle>Register</CardTitle>
-        <CardDescription>Create a new account to get started</CardDescription>
+        <CardTitle className="text-2xl">Register</CardTitle>
+        <CardDescription>Create a new account to get started.</CardDescription>
       </CardHeader>
       <form action={formAction}>
         <CardContent className="flex flex-col gap-4">
           {state?.error && (
-            <p className="text-sm text-destructive">{state.error}</p>
+            <p className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive" aria-live="polite">
+              {state.error}
+            </p>
           )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Name (optional)</Label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              autoComplete="name"
-            />
+            <Input id="name" name="name" type="text" autoComplete="name" />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
@@ -49,6 +46,7 @@ export function RegisterForm() {
               type="email"
               required
               autoComplete="email"
+              spellCheck={false}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -65,11 +63,11 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'Creating account...' : 'Register'}
+            {isPending ? 'Creating account…' : 'Register'}
           </Button>
           <p className="text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary underline">
+            <Link href="/login" className="font-medium text-primary hover:underline">
               Login
             </Link>
           </p>

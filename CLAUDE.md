@@ -34,6 +34,11 @@ pnpm --filter web test          # Frontend component tests
 npx playwright test             # E2E tests
 ```
 
+## Conventions
+
+- **Icons**: Always use `@tabler/icons-react` (tabler-icons) as the icon library. Do not use other icon libraries.
+- **Components**: Always use `@base-ui-components/react` (Base UI) for building UI components. Do not use shadcn/ui or Radix UI primitives for new components.
+
 ## Plans
 
 See `plans/` for phased implementation details.

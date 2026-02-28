@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FeedService } from './feed.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PrismaFeedQueryRepository } from '../contexts/feed/infrastructure/prisma-feed-query.repository';
+import { GetPublicFeedUseCase } from '../contexts/feed/application/use-cases/get-public-feed.use-case';
 
 describe('FeedService', () => {
   let service: FeedService;
@@ -17,6 +19,18 @@ describe('FeedService', () => {
       providers: [
         FeedService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: PrismaFeedQueryRepository,
+          inject: [PrismaService],
+          useFactory: (prismaService: PrismaService) =>
+            new PrismaFeedQueryRepository(prismaService),
+        },
+        {
+          provide: GetPublicFeedUseCase,
+          inject: [PrismaFeedQueryRepository],
+          useFactory: (repository: PrismaFeedQueryRepository) =>
+            new GetPublicFeedUseCase(repository),
+        },
       ],
     }).compile();
 

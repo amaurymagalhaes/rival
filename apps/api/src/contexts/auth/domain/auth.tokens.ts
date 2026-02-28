@@ -1,0 +1,2 @@
+export const AUTH_USER_REPOSITORY = Symbol('AUTH_USER_REPOSITORY');
+export const AUTH_TOKEN_PORT = Symbol('AUTH_TOKEN_PORT');

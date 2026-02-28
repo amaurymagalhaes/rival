@@ -1,22 +1,17 @@
 'use server';
 
-import { createApiUrl } from '@/lib/api';
 import { getAuthHeaders } from '@/lib/auth';
+import { getCurrentUser } from '@/features/auth';
+import type { AuthUser } from '@/features/auth/domain/auth.types';
 
-export type User = {
-  id: string;
-  email: string;
-  name: string | null;
-};
+export type User = AuthUser;
 
-export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUserAction(): Promise<User | null> {
   const headers = await getAuthHeaders();
   if (!headers.Authorization) return null;
 
-  const res = await fetch(createApiUrl('/auth/me'), {
-    headers,
-  });
+  const result = await getCurrentUser(headers);
+  if (!result.ok) return null;
 
-  if (!res.ok) return null;
-  return res.json();
+  return result.data;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardError({
@@ -15,16 +16,19 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <h2 className="text-lg font-semibold">Something went wrong</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          We could not load your dashboard. Please try again.
+    <main className="page-shell py-8">
+      <section className="surface-panel flex flex-col items-center justify-center px-6 py-16 text-center">
+        <span className="mb-4 inline-flex size-12 items-center justify-center rounded-full bg-destructive/12 text-destructive">
+          <AlertTriangle size={22} aria-hidden="true" />
+        </span>
+        <h2 className="display-title text-3xl font-semibold">Something went wrong</h2>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+          We could not load your dashboard. Refresh this section to retry.
         </p>
-        <Button className="mt-4" onClick={reset}>
-          Try again
+        <Button className="mt-6" onClick={reset}>
+          Try Again
         </Button>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

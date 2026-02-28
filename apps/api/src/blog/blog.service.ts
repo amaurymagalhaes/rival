@@ -1,144 +1,81 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PrismaService } from '../prisma/prisma.service';
-import { BlogSummaryProducer } from '../queue/producers/blog-summary.producer';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
-import slugify from 'slugify';
-import { nanoid } from 'nanoid';
+import { CreateBlogUseCase } from '../contexts/blog/application/use-cases/create-blog.use-case';
+import { FindUserBlogsUseCase } from '../contexts/blog/application/use-cases/find-user-blogs.use-case';
+import { FindUserBlogUseCase } from '../contexts/blog/application/use-cases/find-user-blog.use-case';
+import { FindPublishedBlogBySlugUseCase } from '../contexts/blog/application/use-cases/find-published-blog-by-slug.use-case';
+import { UpdateBlogUseCase } from '../contexts/blog/application/use-cases/update-blog.use-case';
+import { DeleteBlogUseCase } from '../contexts/blog/application/use-cases/delete-blog.use-case';
+import { BlogNotFoundError, BlogOwnershipError } from '../contexts/blog/domain/blog.errors';
 
 @Injectable()
 export class BlogService {
   constructor(
-    private prisma: PrismaService,
-    private summaryProducer: BlogSummaryProducer,
     @InjectPinoLogger(BlogService.name)
     private readonly logger: PinoLogger,
+    private readonly createBlogUseCase: CreateBlogUseCase,
+    private readonly findUserBlogsUseCase: FindUserBlogsUseCase,
+    private readonly findUserBlogUseCase: FindUserBlogUseCase,
+    private readonly findPublishedBlogBySlugUseCase: FindPublishedBlogBySlugUseCase,
+    private readonly updateBlogUseCase: UpdateBlogUseCase,
+    private readonly deleteBlogUseCase: DeleteBlogUseCase,
   ) {}
 
+  private toHttpError(error: unknown): never {
+    if (error instanceof BlogNotFoundError) {
+      throw new NotFoundException('Blog not found');
+    }
+    if (error instanceof BlogOwnershipError) {
+      throw new ForbiddenException('Not the blog owner');
+    }
+    throw error;
+  }
+
   async create(dto: CreateBlogDto, userId: string) {
-    const baseSlug = slugify(dto.title, { lower: true, strict: true });
-    let blog;
-    try {
-      blog = await this.prisma.blog.create({
-        data: {
-          title: dto.title,
-          content: dto.content,
-          slug: baseSlug,
-          isPublished: dto.isPublished ?? false,
-          userId,
-        },
-      });
-      this.logger.info({ blogId: blog.id, slug: blog.slug, userId }, 'Blog created');
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        this.logger.debug({ baseSlug, userId }, 'Slug collision, retrying with suffix');
-        blog = await this.prisma.blog.create({
-          data: {
-            title: dto.title,
-            content: dto.content,
-            slug: `${baseSlug}-${nanoid(6)}`,
-            isPublished: dto.isPublished ?? false,
-            userId,
-          },
-        });
-        this.logger.info({ blogId: blog.id, slug: blog.slug, userId }, 'Blog created (slug retry)');
-      } else {
-        throw error;
-      }
-    }
-
-    if (blog.isPublished) {
-      await this.summaryProducer.enqueueSummaryGeneration({
-        blogId: blog.id,
-        title: blog.title,
-        content: blog.content,
-      });
-    }
-
+    const blog = await this.createBlogUseCase.execute(dto, userId);
+    this.logger.info({ blogId: blog.id, slug: blog.slug, userId }, 'Blog created');
     return blog;
   }
 
   async findAllByUser(userId: string) {
-    return this.prisma.blog.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
+    return this.findUserBlogsUseCase.execute(userId);
   }
 
   async findOneByUser(id: string, userId: string) {
-    const blog = await this.prisma.blog.findUnique({ where: { id } });
-    if (!blog) throw new NotFoundException('Blog not found');
-    if (blog.userId !== userId) throw new ForbiddenException('Not the blog owner');
-    return blog;
+    try {
+      return await this.findUserBlogUseCase.execute(id, userId);
+    } catch (error) {
+      this.toHttpError(error);
+    }
   }
 
   async findBySlug(slug: string) {
-    const blog = await this.prisma.blog.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        content: true,
-        summary: true,
-        isPublished: true,
-        createdAt: true,
-        updatedAt: true,
-        user: { select: { id: true, name: true } },
-        _count: { select: { likes: true, comments: true } },
-      },
-    });
-    if (!blog || !blog.isPublished) {
-      throw new NotFoundException('Blog not found');
+    try {
+      return await this.findPublishedBlogBySlugUseCase.execute(slug);
+    } catch (error) {
+      this.toHttpError(error);
     }
-    return blog;
   }
 
   async update(id: string, dto: UpdateBlogDto, userId: string) {
-    const blog = await this.prisma.blog.findUnique({
-      where: { id },
-      select: { userId: true, isPublished: true, title: true, content: true },
-    });
-    if (!blog) throw new NotFoundException('Blog not found');
-    if (blog.userId !== userId) throw new ForbiddenException('Not the blog owner');
-
-    const updated = await this.prisma.blog.update({
-      where: { id },
-      data: dto,
-    });
-    this.logger.info({ blogId: id, userId }, 'Blog updated');
-
-    const wasJustPublished = dto.isPublished === true && !blog.isPublished;
-    const contentChanged =
-      updated.isPublished &&
-      (dto.content !== undefined || dto.title !== undefined);
-
-    if (wasJustPublished || contentChanged) {
-      await this.summaryProducer.enqueueRegeneration({
-        blogId: updated.id,
-        title: updated.title,
-        content: updated.content,
-      });
+    try {
+      const updated = await this.updateBlogUseCase.execute(id, dto, userId);
+      this.logger.info({ blogId: id, userId }, 'Blog updated');
+      return updated;
+    } catch (error) {
+      this.toHttpError(error);
     }
-
-    return updated;
   }
 
   async delete(id: string, userId: string) {
-    const blog = await this.prisma.blog.findUnique({
-      where: { id },
-      select: { userId: true },
-    });
-    if (!blog) throw new NotFoundException('Blog not found');
-    if (blog.userId !== userId) throw new ForbiddenException('Not the blog owner');
-
-    const deleted = await this.prisma.blog.delete({ where: { id } });
-    this.logger.info({ blogId: id, userId }, 'Blog deleted');
-    return deleted;
+    try {
+      const deleted = await this.deleteBlogUseCase.execute(id, userId);
+      this.logger.info({ blogId: id, userId }, 'Blog deleted');
+      return deleted;
+    } catch (error) {
+      this.toHttpError(error);
+    }
   }
 }

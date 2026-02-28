@@ -30,7 +30,7 @@ export function DeleteBlogButton({ blogId }: DeleteBlogButtonProps) {
 
   if (confirming) {
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           <Button
             variant="destructive"
@@ -38,7 +38,7 @@ export function DeleteBlogButton({ blogId }: DeleteBlogButtonProps) {
             onClick={handleDelete}
             disabled={deleting}
           >
-            {deleting ? 'Deleting...' : 'Confirm'}
+            {deleting ? 'Deleting…' : 'Confirm Delete'}
           </Button>
           <Button
             variant="outline"
@@ -49,13 +49,17 @@ export function DeleteBlogButton({ blogId }: DeleteBlogButtonProps) {
             Cancel
           </Button>
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="text-sm text-destructive" aria-live="polite">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <Button
         variant="destructive"
         size="sm"
@@ -63,7 +67,11 @@ export function DeleteBlogButton({ blogId }: DeleteBlogButtonProps) {
       >
         Delete
       </Button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-destructive" aria-live="polite">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

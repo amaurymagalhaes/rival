@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toggleLike } from '@/app/actions/feed';
 
@@ -36,17 +36,18 @@ export function LikeButton({ blogId, initialLiked, initialCount }: Props) {
 
   return (
     <Button
-      variant="ghost"
+      variant={liked ? 'default' : 'outline'}
       size="sm"
       onClick={handleClick}
       disabled={isPending}
-      className="gap-1.5"
+      className="gap-2"
     >
-      <Heart
-        className={liked ? 'fill-red-500 text-red-500' : ''}
-        size={16}
-      />
-      <span>{count}</span>
+      {isPending ? (
+        <LoaderCircle className="animate-spin" size={16} aria-hidden="true" />
+      ) : (
+        <Heart className={liked ? 'fill-current' : ''} size={16} aria-hidden="true" />
+      )}
+      <span className="tabular-nums">{count}</span>
     </Button>
   );
 }

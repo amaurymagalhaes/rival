@@ -3,92 +3,107 @@ import {
   ConflictException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import * as bcrypt from 'bcrypt';
+import { RegisterUserUseCase } from '../contexts/auth/application/use-cases/register-user.use-case';
+import { LoginUserUseCase } from '../contexts/auth/application/use-cases/login-user.use-case';
+import { RefreshSessionUseCase } from '../contexts/auth/application/use-cases/refresh-session.use-case';
+import { LogoutSessionUseCase } from '../contexts/auth/application/use-cases/logout-session.use-case';
+import { GetCurrentUserUseCase } from '../contexts/auth/application/use-cases/get-current-user.use-case';
+import {
+  DuplicateEmailRegistrationError,
+  InvalidRefreshTokenError,
+  InvalidPasswordForLoginError,
+  RefreshTokenReuseDetectedError,
+  UserNotFoundForSessionError,
+  UserNotFoundForLoginError,
+} from '../contexts/auth/domain/auth.errors';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
     @InjectPinoLogger(AuthService.name)
     private readonly logger: PinoLogger,
+    private readonly registerUserUseCase: RegisterUserUseCase,
+    private readonly loginUserUseCase: LoginUserUseCase,
+    private readonly refreshSessionUseCase: RefreshSessionUseCase,
+    private readonly logoutSessionUseCase: LogoutSessionUseCase,
+    private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
   ) {}
 
   async register(dto: RegisterDto) {
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
-
-    let user;
     try {
-      user = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          passwordHash: hashedPassword,
-          name: dto.name,
-        },
-        select: { id: true, email: true, name: true, createdAt: true },
-      });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        this.logger.warn({ email: dto.email }, 'Registration failed: duplicate email');
+      const result = await this.registerUserUseCase.execute(dto);
+      this.logger.info({ userId: result.user.id }, 'User registered');
+      return result;
+    } catch (error) {
+      if (error instanceof DuplicateEmailRegistrationError) {
+        this.logger.warn(
+          { email: dto.email },
+          'Registration failed: duplicate email',
+        );
         throw new ConflictException('Email already exists');
       }
+      this.logger.error(
+        { err: error, email: dto.email },
+        'Registration failed: unexpected error',
+      );
       throw error;
     }
-
-    this.logger.info({ userId: user.id }, 'User registered');
-
-    const accessToken = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-    });
-
-    return { accessToken, user };
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      select: { id: true, email: true, name: true, passwordHash: true },
-    });
-
-    if (!user) {
-      this.logger.warn({ email: dto.email }, 'Login failed: user not found');
-      throw new UnauthorizedException('Invalid credentials');
+    try {
+      const result = await this.loginUserUseCase.execute(dto);
+      this.logger.info({ userId: result.user.id }, 'User logged in');
+      return result;
+    } catch (error) {
+      if (error instanceof UserNotFoundForLoginError) {
+        this.logger.warn({ email: error.email }, 'Login failed: user not found');
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      if (error instanceof InvalidPasswordForLoginError) {
+        this.logger.warn({ userId: error.userId }, 'Login failed: invalid password');
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      throw error;
     }
+  }
 
-    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
-
-    if (!passwordValid) {
-      this.logger.warn({ userId: user.id }, 'Login failed: invalid password');
-      throw new UnauthorizedException('Invalid credentials');
+  async refresh(rawRefreshToken: string) {
+    try {
+      return await this.refreshSessionUseCase.execute(rawRefreshToken);
+    } catch (error) {
+      if (error instanceof RefreshTokenReuseDetectedError) {
+        this.logger.warn(
+          { userId: error.userId },
+          'Refresh token reuse detected',
+        );
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      if (
+        error instanceof InvalidRefreshTokenError ||
+        error instanceof UserNotFoundForSessionError
+      ) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      throw error;
     }
+  }
 
-    this.logger.info({ userId: user.id }, 'User logged in');
-
-    const accessToken = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-    });
-
-    return {
-      accessToken,
-      user: { id: user.id, email: user.email, name: user.name },
-    };
+  async logout(rawRefreshToken: string) {
+    await this.logoutSessionUseCase.execute(rawRefreshToken);
   }
 
   async me(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, name: true, createdAt: true },
-    });
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    try {
+      return await this.getCurrentUserUseCase.execute(userId);
+    } catch (error) {
+      if (error instanceof UserNotFoundForSessionError) {
+        throw new UnauthorizedException('User not found');
+      }
+      throw error;
     }
-    return user;
   }
 }

@@ -1,10 +1,11 @@
 import { SeoService } from './seo.service';
+import { AnalyzeBlogSeoUseCase } from '../contexts/seo/application/use-cases/analyze-blog-seo.use-case';
 
 describe('SeoService', () => {
   let service: SeoService;
 
   beforeEach(() => {
-    service = new SeoService();
+    service = new SeoService(new AnalyzeBlogSeoUseCase());
   });
 
   it('should calculate readability score within valid range', () => {

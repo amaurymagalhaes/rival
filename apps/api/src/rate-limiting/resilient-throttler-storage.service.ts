@@ -1,8 +1,12 @@
 import { Inject, Injectable, Logger, Optional, OnModuleDestroy } from '@nestjs/common';
-import {
-  ThrottlerStorage,
-  ThrottlerStorageRecord,
-} from '@nestjs/throttler';
+import { ThrottlerStorage } from '@nestjs/throttler';
+
+interface ThrottlerStorageRecord {
+  totalHits: number;
+  timeToExpire: number;
+  isBlocked: boolean;
+  timeToBlockExpire: number;
+}
 import { REDIS_THROTTLER_STORAGE } from './rate-limiting.constants';
 
 interface RedisStorageLike {

@@ -3,6 +3,9 @@ import { LikeService } from './like.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConflictException } from '@nestjs/common';
 import { mockLoggerProvider } from '../common/logger/logger.test-utils';
+import { PrismaLikeRepository } from '../contexts/like/infrastructure/prisma-like.repository';
+import { LikeBlogUseCase } from '../contexts/like/application/use-cases/like-blog.use-case';
+import { UnlikeBlogUseCase } from '../contexts/like/application/use-cases/unlike-blog.use-case';
 
 describe('LikeService', () => {
   let service: LikeService;
@@ -21,6 +24,24 @@ describe('LikeService', () => {
       providers: [
         LikeService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: PrismaLikeRepository,
+          inject: [PrismaService],
+          useFactory: (prismaService: PrismaService) =>
+            new PrismaLikeRepository(prismaService),
+        },
+        {
+          provide: LikeBlogUseCase,
+          inject: [PrismaLikeRepository],
+          useFactory: (repository: PrismaLikeRepository) =>
+            new LikeBlogUseCase(repository),
+        },
+        {
+          provide: UnlikeBlogUseCase,
+          inject: [PrismaLikeRepository],
+          useFactory: (repository: PrismaLikeRepository) =>
+            new UnlikeBlogUseCase(repository),
+        },
         mockLoggerProvider(LikeService.name),
       ],
     }).compile();

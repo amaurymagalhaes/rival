@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -31,15 +32,25 @@ export function BlogEditor({ blog }: BlogEditorProps) {
   >(action, null);
 
   return (
-    <Card className="w-full max-w-2xl">
+    <Card className="w-full max-w-3xl border-border/75">
       <CardHeader>
-        <CardTitle>{blog ? 'Edit Blog' : 'New Blog'}</CardTitle>
+        <CardTitle className="text-2xl">
+          {blog ? 'Edit Blog' : 'New Blog'}
+        </CardTitle>
+        <CardDescription>
+          {blog
+            ? 'Refine the draft and publish updates when ready.'
+            : 'Draft with clarity and publish when your article is ready.'}
+        </CardDescription>
       </CardHeader>
       <form action={formAction}>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent className="flex flex-col gap-5">
           {state?.error && (
-            <p className="text-sm text-destructive">{state.error}</p>
+            <p className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive" aria-live="polite">
+              {state.error}
+            </p>
           )}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -47,36 +58,46 @@ export function BlogEditor({ blog }: BlogEditorProps) {
               name="title"
               required
               maxLength={200}
+              autoComplete="off"
+              placeholder="Write a concise headline…"
               defaultValue={blog?.title ?? ''}
             />
           </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="content">Content</Label>
             <Textarea
               id="content"
               name="content"
               required
-              rows={10}
+              rows={14}
+              autoComplete="off"
+              placeholder="Write your post…"
               defaultValue={blog?.content ?? ''}
             />
           </div>
-          <div className="flex items-center gap-2">
+
+          <label
+            htmlFor="isPublished"
+            className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-border/75 bg-white/70 px-3 py-2 text-sm"
+          >
             <input
               id="isPublished"
               name="isPublished"
               type="checkbox"
               defaultChecked={blog?.isPublished ?? false}
-              className="h-4 w-4"
+              className="h-4 w-4 rounded border-border text-primary accent-primary"
             />
-            <Label htmlFor="isPublished">Publish</Label>
-          </div>
+            Publish
+          </label>
         </CardContent>
-        <CardFooter className="flex gap-4">
+
+        <CardFooter className="flex gap-3">
           <Button type="submit" disabled={isPending}>
             {isPending
               ? blog
-                ? 'Saving...'
-                : 'Creating...'
+                ? 'Saving…'
+                : 'Creating…'
               : blog
                 ? 'Save Changes'
                 : 'Create Blog'}

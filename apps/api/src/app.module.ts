@@ -14,6 +14,7 @@ import { SeoModule } from './seo/seo.module';
 import { QueueDashboardModule } from './queue-dashboard/queue-dashboard.module';
 import { QUEUE_NAMES } from './queue/queue.constants';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { loggerConfig } from './common/logger/logger.config';
 import { RedisModule } from './redis';
@@ -48,6 +49,7 @@ import { RateLimitingModule, TieredThrottlerGuard } from './rate-limiting';
     AppService,
     { provide: APP_GUARD, useClass: TieredThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })

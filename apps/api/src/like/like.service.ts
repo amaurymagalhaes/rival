@@ -1,47 +1,36 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PrismaService } from '../prisma/prisma.service';
+import { LikeBlogUseCase } from '../contexts/like/application/use-cases/like-blog.use-case';
+import { UnlikeBlogUseCase } from '../contexts/like/application/use-cases/unlike-blog.use-case';
+import { DuplicateLikeError } from '../contexts/like/domain/like.errors';
 
 @Injectable()
 export class LikeService {
   constructor(
-    private prisma: PrismaService,
     @InjectPinoLogger(LikeService.name)
     private readonly logger: PinoLogger,
+    private readonly likeBlogUseCase: LikeBlogUseCase,
+    private readonly unlikeBlogUseCase: UnlikeBlogUseCase,
   ) {}
 
   async like(blogId: string, userId: string) {
     try {
-      await this.prisma.like.create({
-        data: { blogId, userId },
-      });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+      const result = await this.likeBlogUseCase.execute(blogId, userId);
+      const likeCount = result.likeCount;
+      this.logger.debug({ blogId, userId, likeCount }, 'Blog liked');
+      return result;
+    } catch (error) {
+      if (error instanceof DuplicateLikeError) {
         throw new ConflictException('Already liked');
       }
       throw error;
     }
-
-    const likeCount = await this.prisma.like.count({ where: { blogId } });
-    this.logger.debug({ blogId, userId, likeCount }, 'Blog liked');
-    return { liked: true, likeCount };
   }
 
   async unlike(blogId: string, userId: string) {
-    try {
-      await this.prisma.like.delete({
-        where: { userId_blogId: { userId, blogId } },
-      });
-    } catch (error: any) {
-      if (error.code === 'P2025') {
-        // Record not found — idempotent
-      } else {
-        throw error;
-      }
-    }
-
-    const likeCount = await this.prisma.like.count({ where: { blogId } });
+    const result = await this.unlikeBlogUseCase.execute(blogId, userId);
+    const likeCount = result.likeCount;
     this.logger.debug({ blogId, userId, likeCount }, 'Blog unliked');
-    return { liked: false, likeCount };
+    return result;
   }
 }

@@ -1,0 +1,1 @@
+export const FEED_QUERY_REPOSITORY = Symbol('FEED_QUERY_REPOSITORY');
