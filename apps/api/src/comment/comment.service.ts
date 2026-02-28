@@ -7,6 +7,14 @@ export class CommentService {
   constructor(private prisma: PrismaService) {}
 
   async create(blogId: string, userId: string, dto: CreateCommentDto) {
+    const blog = await this.prisma.blog.findUnique({
+      where: { id: blogId },
+      select: { id: true, isPublished: true },
+    });
+    if (!blog || !blog.isPublished) {
+      throw new NotFoundException('Blog not found');
+    }
+
     return this.prisma.comment.create({
       data: {
         blogId,

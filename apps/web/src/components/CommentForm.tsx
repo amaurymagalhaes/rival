@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { postComment, type CommentFormState } from '@/app/actions/feed';
@@ -15,9 +15,16 @@ export function CommentForm({ blogId }: Props) {
     boundAction,
     null,
   );
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state === null && formRef.current) {
+      formRef.current.reset();
+    }
+  }, [state]);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form ref={formRef} action={formAction} className="space-y-3">
       <Textarea
         name="content"
         placeholder="Write a comment..."

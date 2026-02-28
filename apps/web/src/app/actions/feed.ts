@@ -28,7 +28,7 @@ export type BlogDetail = {
   summary: string | null;
   createdAt: string;
   isPublished: boolean;
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string };
   _count: { likes: number; comments: number };
 };
 
@@ -62,10 +62,10 @@ export async function getBlogBySlug(slug: string): Promise<BlogDetail | null> {
 
 export async function toggleLike(
   blogId: string,
-  liked: boolean,
+  newLiked: boolean,
 ): Promise<void> {
   const headers = await getAuthHeaders();
-  const method = liked ? 'DELETE' : 'POST';
+  const method = newLiked ? 'POST' : 'DELETE';
 
   await fetch(createApiUrl(`/blogs/${blogId}/like`), {
     method,
@@ -73,7 +73,7 @@ export async function toggleLike(
   });
 
   revalidatePath('/feed');
-  revalidatePath('/blogs');
+  revalidatePath('/blogs', 'layout');
 }
 
 export type CommentFormState = {
@@ -103,7 +103,8 @@ export async function postComment(
     return { error: data.message || 'Failed to post comment' };
   }
 
-  revalidatePath('/blogs');
+  revalidatePath('/blogs', 'layout');
+  revalidatePath('/feed');
   return null;
 }
 

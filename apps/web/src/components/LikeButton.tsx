@@ -17,12 +17,20 @@ export function LikeButton({ blogId, initialLiked, initialCount }: Props) {
   const [isPending, startTransition] = useTransition();
 
   function handleClick() {
-    const wasLiked = liked;
-    setLiked(!wasLiked);
-    setCount(wasLiked ? count - 1 : count + 1);
+    const prevLiked = liked;
+    const prevCount = count;
+    const newLiked = !prevLiked;
+
+    setLiked(newLiked);
+    setCount(newLiked ? prevCount + 1 : prevCount - 1);
 
     startTransition(async () => {
-      await toggleLike(blogId, wasLiked);
+      try {
+        await toggleLike(blogId, newLiked);
+      } catch {
+        setLiked(prevLiked);
+        setCount(prevCount);
+      }
     });
   }
 

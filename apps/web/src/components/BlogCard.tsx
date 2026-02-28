@@ -20,12 +20,10 @@ export function BlogCard({ blog }: { blog: FeedItem }) {
           {new Date(blog.createdAt).toLocaleDateString()}
         </p>
       </CardHeader>
-      {blog.summary && (
-        <CardContent>
-          <p className="text-muted-foreground line-clamp-2">{blog.summary}</p>
-        </CardContent>
-      )}
       <CardContent>
+        {blog.summary && (
+          <p className="text-muted-foreground line-clamp-2 mb-3">{blog.summary}</p>
+        )}
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Heart size={14} />

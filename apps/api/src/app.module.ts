@@ -14,7 +14,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 @Module({
   imports: [
     PrismaModule,
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 60 }]),
     AuthModule,
     BlogModule,
     FeedModule,
@@ -24,8 +24,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
 export class AppModule {}
