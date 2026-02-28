@@ -1,9 +1,14 @@
 import { Injectable, ConflictException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class LikeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @InjectPinoLogger(LikeService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   async like(blogId: string, userId: string) {
     try {
@@ -18,6 +23,7 @@ export class LikeService {
     }
 
     const likeCount = await this.prisma.like.count({ where: { blogId } });
+    this.logger.debug({ blogId, userId, likeCount }, 'Blog liked');
     return { liked: true, likeCount };
   }
 
@@ -35,6 +41,7 @@ export class LikeService {
     }
 
     const likeCount = await this.prisma.like.count({ where: { blogId } });
+    this.logger.debug({ blogId, userId, likeCount }, 'Blog unliked');
     return { liked: false, likeCount };
   }
 }

@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { mockLoggerProvider } from '../common/logger/logger.test-utils';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
@@ -26,6 +27,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
+        mockLoggerProvider(AuthService.name),
       ],
     }).compile();
 

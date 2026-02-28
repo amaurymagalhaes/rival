@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -11,12 +12,16 @@ import { nanoid } from 'nanoid';
 
 @Injectable()
 export class BlogService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @InjectPinoLogger(BlogService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   async create(dto: CreateBlogDto, userId: string) {
     const baseSlug = slugify(dto.title, { lower: true, strict: true });
     try {
-      return await this.prisma.blog.create({
+      const blog = await this.prisma.blog.create({
         data: {
           title: dto.title,
           content: dto.content,
@@ -25,9 +30,12 @@ export class BlogService {
           userId,
         },
       });
+      this.logger.info({ blogId: blog.id, slug: blog.slug, userId }, 'Blog created');
+      return blog;
     } catch (error: any) {
       if (error.code === 'P2002') {
-        return await this.prisma.blog.create({
+        this.logger.debug({ baseSlug, userId }, 'Slug collision, retrying with suffix');
+        const blog = await this.prisma.blog.create({
           data: {
             title: dto.title,
             content: dto.content,
@@ -36,6 +44,8 @@ export class BlogService {
             userId,
           },
         });
+        this.logger.info({ blogId: blog.id, slug: blog.slug, userId }, 'Blog created (slug retry)');
+        return blog;
       }
       throw error;
     }
@@ -85,10 +95,12 @@ export class BlogService {
     if (!blog) throw new NotFoundException('Blog not found');
     if (blog.userId !== userId) throw new ForbiddenException('Not the blog owner');
 
-    return this.prisma.blog.update({
+    const updated = await this.prisma.blog.update({
       where: { id },
       data: dto,
     });
+    this.logger.info({ blogId: id, userId }, 'Blog updated');
+    return updated;
   }
 
   async delete(id: string, userId: string) {
@@ -99,6 +111,8 @@ export class BlogService {
     if (!blog) throw new NotFoundException('Blog not found');
     if (blog.userId !== userId) throw new ForbiddenException('Not the blog owner');
 
-    return this.prisma.blog.delete({ where: { id } });
+    const deleted = await this.prisma.blog.delete({ where: { id } });
+    this.logger.info({ blogId: id, userId }, 'Blog deleted');
+    return deleted;
   }
 }

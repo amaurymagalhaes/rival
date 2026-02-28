@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,6 +15,8 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    @InjectPinoLogger(AuthService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -31,10 +34,13 @@ export class AuthService {
       });
     } catch (error: any) {
       if (error.code === 'P2002') {
+        this.logger.warn({ email: dto.email }, 'Registration failed: duplicate email');
         throw new ConflictException('Email already exists');
       }
       throw error;
     }
+
+    this.logger.info({ userId: user.id }, 'User registered');
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
@@ -51,14 +57,18 @@ export class AuthService {
     });
 
     if (!user) {
+      this.logger.warn({ email: dto.email }, 'Login failed: user not found');
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordValid) {
+      this.logger.warn({ userId: user.id }, 'Login failed: invalid password');
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    this.logger.info({ userId: user.id }, 'User logged in');
 
     const accessToken = this.jwtService.sign({
       sub: user.id,

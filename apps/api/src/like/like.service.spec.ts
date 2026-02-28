@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LikeService } from './like.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConflictException } from '@nestjs/common';
+import { mockLoggerProvider } from '../common/logger/logger.test-utils';
 
 describe('LikeService', () => {
   let service: LikeService;
@@ -20,6 +21,7 @@ describe('LikeService', () => {
       providers: [
         LikeService,
         { provide: PrismaService, useValue: prisma },
+        mockLoggerProvider(LikeService.name),
       ],
     }).compile();
 

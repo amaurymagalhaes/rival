@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ForbiddenException } from '@nestjs/common';
+import { mockLoggerProvider } from '../common/logger/logger.test-utils';
 
 describe('BlogService', () => {
   let service: BlogService;
@@ -22,6 +23,7 @@ describe('BlogService', () => {
       providers: [
         BlogService,
         { provide: PrismaService, useValue: prisma },
+        mockLoggerProvider(BlogService.name),
       ],
     }).compile();
 
