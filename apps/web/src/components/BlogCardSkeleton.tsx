@@ -11,9 +11,7 @@ export function BlogCardSkeleton() {
       <CardContent>
         <Skeleton className="h-4 w-full" />
         <Skeleton className="mt-2 h-4 w-2/3" />
-      </CardContent>
-      <CardContent>
-        <div className="flex items-center gap-4">
+        <div className="mt-3 flex items-center gap-4">
           <Skeleton className="h-4 w-12" />
           <Skeleton className="h-4 w-12" />
         </div>
